@@ -9,6 +9,11 @@ body {
     align-items: center;
     gap: 5px;
 }
+h1{
+    color: white;
+    font-size: 70px;
+    text-align: center;
+}
 
 img {
     width: 400px;
@@ -29,7 +34,6 @@ img {
 }
 
 button {
-
     top: 47px;
     width: 230px;
     height: 50px;
@@ -51,45 +55,98 @@ button {
 
 .quadrado1 {
     background-color: white;
-    width: 1200px;
-    height: 680px;
+    width: 900px;
+    height: 500px;
     border-radius: 25px;
     padding: 10px;
 }
 
 .quadrado2 {
     background-color: white;
-    width: 610px;
-    height: 700px;
+    width: 1000px;
+    height: 500;
     margin-right: 50px;
     border-radius: 25px;
 }
 
 .botaov {
-
-    margin-top: 20px;
-    margin-left: 1400px;
+    margin-top: 12px;
+    margin-left: 1300px;
 }
 
 label {
     display: block;
     margin-top: 10px;
-    margin-left: 20px;
+    margin-left: 50px;
     font-size: 18px;
-    width: 400px;
 }
 
 input {
     display: block;
     margin-top: 5px;
-    margin-left: 20px;
-    width: 400px;
+    margin-left: 50px;
+    width: 500px;
     height: 30px;
     font-size: 18px;
     cursor: text;
 }
+
 .inputs {
     display: flex;
-    align-items: flex-end;
     gap: 20px;
+    align-items: flex-end;
+    margin-left: 20px;
+}
+
+.inputs label {
+    margin-left: 0;
+}
+
+.inputs input {
+    margin-left: 80px;
+    width: 150px;
+}
+
+.checkbox {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-left: 50px;
+    margin-top: 15px;
+    font-size: 18px;
+}
+
+.checkbox label {
+    display: inline;
+    margin-left: 5px;
+    font-size: 18px;
+}
+
+.checkbox input {
+    display: inline;
+    width: auto;
+    height: auto;
+    margin-left: 0;
+    margin-top: 0;
+    cursor: pointer;
+}
+
+.checkbox div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+textarea {
+    display: block;
+    margin-top: 5px;
+    margin-left: 20px;
+    width: 500px;
+    height: 120px;
+    font-size: 18px;
+    cursor: text;
+    resize: none;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
 }

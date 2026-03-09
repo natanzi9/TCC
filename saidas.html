@@ -14,47 +14,61 @@
     <div class="container">
         <img src="img/images.png">
         <div class="navbar">
-
             <a href="home.html">
                 <button> HOME </button>
             </a>
-
             <a href="adicionaritens.html">
                 <button> ADICIONAR ITENS</button>
             </a>
-
             <a href="estoque.html">
                 <button> ESTOQUE </button>
             </a>
-
             <button> REGISTRAR SAÍDAS </button>
-
             <a href="index.html">
                 <button> FECHAR </button>
             </a>
         </div>
     </div>
 
-    <h1></h1>
+    <h1> SAÍDAS DE INSUMOS </h1>
 
     <div class="quadrados">
         <div class="quadrado1">
 
-
-
-            <label for="username">Nome do solicitante:</label>
+            <label for="solicitante">Nome do solicitante:</label>
             <input type="text" id="solicitante" name="">
 
-            <label for="username">Nome do almoxarife:</label>
+            <label for="almoxarife">Nome do almoxarife:</label>
             <input type="text" id="almoxarife" name="">
 
-            <label for="username">Data de retirada (se ter):</label>
+            <label for="data">Data de retirada (se ter):</label>
             <input type="date" id="data" name="">
 
             <div class="inputs">
-                <label for="username">ID do iten:</label>
-                <input type="text" id="id" name="">
+                <div>
+                    <label for="id">ID do item:</label>
+                    <input type="text" id="id" name="">
+                </div>
+                <div>
+                    <label for="qtde">QTDE:</label>
+                    <input type="text" id="qtde" name="">
+                </div>
             </div>
+
+            <div class="checkbox">
+                <span>ITEM COM DEVOLUÇÃO?</span>
+                <div>
+                    <label for="sim">Sim</label>
+                    <input type="checkbox" id="sim" name="devolucao">
+                </div>
+                <div>
+                    <label for="nao">Não</label>
+                    <input type="checkbox" id="nao" name="devolucao">
+                </div>
+            </div>
+
+            <label for="obs">Observações:</label>
+            <textarea id="obs" name="obs"></textarea>
 
         </div>
 
@@ -64,7 +78,7 @@
     </div>
 
     <div class="botaov">
-        <button> vizualizar </button>
+        <button> Visualizar </button>
     </div>
 
 </body>
