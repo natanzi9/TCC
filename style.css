@@ -1,0 +1,80 @@
+body {
+    background-color: #045cac;
+    margin: 0;
+    padding: 0;
+}
+
+img {
+    width: 464px;
+    height: 118px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 50px;
+}
+
+h1 {
+    color: #045cac;
+    padding-top: 40px;
+    margin-bottom: 0;
+}
+
+.quadrado {
+    background-color: white;
+    position: relative;
+    border-radius: 50px;
+    width: 874px;
+    height: 680px;
+    margin: 30px auto;
+    text-align: center;
+    font-size: 35px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.input1 {
+    font-size: 30px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    margin: 0 auto;
+    padding-top: 80px;
+    width: fit-content;
+    text-align: left;
+}
+
+.input2 {
+    font-size: 30px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    margin: 40px auto 0 auto;
+    width: fit-content;
+    text-align: left;
+}
+
+input[type="text"],
+input[type="password"] {
+    font-size: 22px;
+    padding: 6px 12px;
+    width: 350px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background-color: #135E9F;
+    border-radius: 6px;
+    width: 200px;
+    height: 70px;
+    font-size: 25px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    color: whitesmoke;
+    border: none;
+    cursor: pointer;
+    display: block;
+    margin: 60px auto 0 auto;
+}
+
+a {
+    font-size: 20px;
+    color: #135E9F;
+    display: block;
+    margin-top: 25px;
+    text-decoration: none;
+}

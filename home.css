@@ -1,0 +1,133 @@
+body {
+    background-color: #045cac;
+    margin: 0;
+    padding: 0;
+}
+
+img {
+    width: 400px;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.navbar {
+    background-color: white;
+    width: 1500px;
+    height: 75px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.navbar a {
+    display: contents;
+}
+
+.navbar button {
+    top: 47px;
+    width: 230px;
+    height: 50px;
+    margin-left: 80px;
+    border-radius: 40px;
+    background-color: white;
+    border-width: 0px;
+    font-size: 20px;
+    color: #135E9F;
+    cursor: pointer;
+}
+
+.quadrado {
+    width: 1750px;
+    height: 420px;
+    background-color: white;
+    margin-top: 430px;
+    margin-left: 80px;
+    border-radius: 20px;
+}
+
+.header {
+    position: absolute;
+    left: 35px;
+    top: 40px;
+}
+
+.bem-vindo {
+    position: absolute;
+    left: -3px;
+    top: 100px;
+    color: white;
+    white-space: nowrap;
+}
+
+.sistema-titulo {
+    position: absolute;
+    left: 340px;
+    top: 210px;
+    color: white;
+    font-size: 85px;
+    white-space: nowrap;
+}
+
+.resumo-estoque {
+    position: absolute;
+    left: 100px;
+    top: 550px;
+    color: #135E9F;
+}
+
+.itens-cadastrados-esq {
+    position: absolute;
+    left: 330px;
+    top: 830px;
+    color: #808080;
+}
+
+.itens-cadastrados-dir {
+    position: absolute;
+    left: 930px;
+    top: 830px;
+    color: #808080;
+}
+
+.contador-dir {
+    position: absolute;
+    left: 1030px;
+    top: 700px;
+    font-size: 85px;
+    color: black;
+}
+
+.contador-esq {
+    position: absolute;
+    left: 430px;
+    top: 700px;
+    font-size: 85px;
+    color: black;
+}
+
+.ultimos-itens {
+    position: absolute;
+    left: 1300px;
+    top: 560px;
+    font-size: 30px;
+    color: #135E9F;
+}
+
+.unid {
+    position: absolute;
+    left: 1700px;
+    top: 650px;
+    color: #808080;
+}
+
+.separador {
+    position: absolute;
+    left: 1300px;
+    top: 650px;
+    color: #808080;
+}

@@ -1,0 +1,83 @@
+body {
+    background-color: #135E9Fff;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.quadradocc {
+    background-color: white;
+    border-radius: 50px;
+    width: 874px;
+    height: 760px;
+    margin: 30px auto;
+    text-align: center;
+    font-size: 35px;
+    font-family: sans-serif;
+    padding-top: 20px;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: #135E9Fff;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    margin-bottom: 25px;
+}
+
+img {
+    width: 464px;
+    height: 118px;
+    display: block;
+    margin: 0 auto;
+}
+
+label {
+    font-size: 15px;
+    display: block;
+    text-align: left;
+    width: 700px;
+    margin: 15px auto 4px auto;
+}
+
+.input1,
+.input2,
+.input3 {
+    display: block;
+    margin: 0 auto;
+    width: 700px;
+    height: 45px;
+    border-radius: 8px;
+    border: 2px solid #045cac;
+    font-size: 20px;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+.parabens {
+    margin-top: 35px;
+}
+
+.parabens button {
+    background-color: #045cac;
+    color: white;
+    font-size: 35px;
+    width: 400px;
+    height: 85px;
+    border: 2px solid black;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.voltar {
+    margin-top: 15px;
+}
+
+.voltar button {
+    color: blue;
+    background-color: white;
+    border-color: white;
+    border: 2px solid white;
+    border-radius: 10px;
+    font-size: 20px;
+    cursor: pointer;
+}
