@@ -7,9 +7,11 @@
     <title>ESTOQUE</title>
     <link rel="shortcut icon" type="imagex/png" href="img/fiep.jpg">
     <link rel="stylesheet" href="{{ url_for('static', filename='styleestoque.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='main.js') }}" defer></script>
 </head>
 
-<body>
+<body onload="colorirestoque()">
 
     <div class="container">
         <img src="static/images.png">
@@ -23,7 +25,7 @@
             <button> ADICIONAR ITENS</button>
             </a>
 
-            <button> ESTOQUE </button>
+            <button id="estoque"> ESTOQUE </button>
 
             <a href="/saidas">
                 <button> REGISTRAR SAÍDAS </button>

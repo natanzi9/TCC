@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAÍDAS DE INSUMOS</title>
     <link rel="shortcut icon" type="imagex/png" href="static/fiep.jpg">
-      <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='main.js') }}" defer></script>
 </head>
 
 <body>
@@ -15,18 +17,18 @@
         <img src="static/images.png">
         <div class="navbar">
 
-            <a href="/home">
+            <a href="/home" id="home">
                 <button> HOME </button>
             </a>
-            <a href="/adicionaritens">
+            <a href="/adicionaritens"id="itens">
                 <button> ADICIONAR ITENS</button>
             </a>
-            <a href="/estoque">
+            <a href="/estoque"id="estoque">
                 <button> ESTOQUE </button>
             </a>
             <button> REGISTRAR SAÍDAS </button>
 
-            <a href="/">
+            <a href="/"id="FECHAR">
                 <button> FECHAR </button>
 
             </a>
