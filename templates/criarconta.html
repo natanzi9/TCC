@@ -5,13 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRIAR CONTA</title>
-    <link rel="stylesheet" href="stylecc.css">
     <link rel="shortcut icon" type="imagex/png" href="img/fiep.jpg">
-    <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylecc.css') }}">
 </head>
 
 <body>
-    <img src="img/images.png" height="100" width="300"><br><br>
+    <img src="{{ url_for('static', filename='images.png') }}" height="100" width="300"><br><br>
 
     <div class="quadradocc">
 
@@ -37,7 +36,7 @@
         </div>
 
         <div class="voltar">
-            <a href="index.html"><button><i>Volte para o login</i></button></a>
+            <a href="/"><button><i>Volte para o login</i></button></a>
         </div>
 
     </div>

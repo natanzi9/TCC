@@ -5,28 +5,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAÍDAS DE INSUMOS</title>
-    <link rel="stylesheet" href="stylesaida.css">
-    <link rel="shortcut icon" type="imagex/png" href="img/fiep.jpg">
-    <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
+    <link rel="shortcut icon" type="imagex/png" href="static/fiep.jpg">
+      <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
 </head>
 
 <body>
 
     <div class="container">
-        <img src="img/images.png">
+        <img src="static/images.png">
         <div class="navbar">
-            <a href="home.html">
+
+            <a href="/home">
                 <button> HOME </button>
             </a>
-            <a href="adicionaritens.html">
+            <a href="/adicionaritens">
                 <button> ADICIONAR ITENS</button>
             </a>
-            <a href="estoque.html">
+            <a href="/estoque">
                 <button> ESTOQUE </button>
             </a>
             <button> REGISTRAR SAÍDAS </button>
-            <a href="index.html">
+
+            <a href="/">
                 <button> FECHAR </button>
+
             </a>
         </div>
     </div>

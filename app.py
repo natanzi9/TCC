@@ -22,9 +22,9 @@ def estoque():
 def saidas():
     return render_template("saidas.html")
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
 @app.route('/criarconta')
-def login():
-    return render_template("criarconta")
+def criarconta():                                   
+    return render_template("criarconta.html")       
+
+if __name__ == '__main__':
+    app.run(debug=True)    

@@ -1,5 +1,5 @@
 body {
-    background-color: #135E9Fff;
+    background-color: #045cac;
     text-align: center;
     margin: 0;
     padding: 0;
@@ -7,10 +7,10 @@ body {
 
 .quadradocc {
     background-color: white;
-    border-radius: 50px;
+    border-radius: 30px;
     width: 874px;
-    height: 760px;
-    margin: 30px auto;
+    height: 680px; 
+    margin: 0 auto;
     text-align: center;
     font-size: 35px;
     font-family: sans-serif;
@@ -28,7 +28,9 @@ img {
     width: 464px;
     height: 118px;
     display: block;
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
 }
 
 label {

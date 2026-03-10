@@ -5,14 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOGIN</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="shortcut icon" type="imagex/png" href="img/fiep.jpg">
-    <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-    <img src="img/images.png">
+    <img src="{{ url_for('static', filename='images.png') }}">
 
     <div class="quadrado">
 
@@ -30,13 +29,13 @@
             <input type="password" id="senha" name="nome" placeholder="Digite sua Senha">
         </div>
 
-        <a href="home.html">
+        <a href="/home">
             <button>
                 ENTRAR
             </button>
         </a>
 
-        <a href="criarconta.html"> <strong><em>Crie uma conta</em></strong></a>
+        <a href="/criarconta"><strong><em>Crie uma conta</em></strong></a>
     </div>
 
 </body>

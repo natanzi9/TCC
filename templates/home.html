@@ -5,33 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOME</title>
-    <link rel="stylesheet" href="home.css">
     <link rel="shortcut icon" type="imagex/png" href="img/fiep.jpg">
-    <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
 </head>
 
 <body>
 
     <div class="container">
-        <img src="img/images.png">
+        <img src="static/images.png">
         <div class="navbar">
 
             
             <button> HOME </button>
 
-            <a href="adicionaritens.html">
+            <a href="/adicionaritens">
             <button> ADICIONAR ITENS</button>
             </a>
 
-            <a href="estoque.html">
+            <a href="/estoque">
                 <button> ESTOQUE </button>
             </a>
 
-            <a href="saidas.html">
+            <a href="/saidas">
                 <button> REGISTRAR SAÍDAS </button>
             </a>
 
-            <a href="index.html">
+            <a href="/">
                 <button> FECHAR </button>
             </a>
         </div>
@@ -54,5 +53,4 @@
         <h3 class="separador">•_____</h3>
     </div>
 </body>
-
 </html>
