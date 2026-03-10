@@ -11,22 +11,25 @@
     <script src="{{ url_for('static', filename='main.js') }}" defer></script>
 </head>
 
-<body>
+<body onload="saida()">
 
     <div class="container">
         <img src="static/images.png">
         <div class="navbar">
 
-            <a href="/home" id="home">
-                <button> HOME </button>
+            <a href="/home">
+                <button id="home"> HOME </button>
             </a>
-            <a href="/adicionaritens"id="itens">
-                <button> ADICIONAR ITENS</button>
+            
+            <a href="/adicionaritens">
+                <button id="itens"> ADICIONAR ITENS</button>
             </a>
-            <a href="/estoque"id="estoque">
-                <button> ESTOQUE </button>
+
+            <a href="/estoque">
+                <button id="estoque"> ESTOQUE </button>
             </a>
-            <button> REGISTRAR SAÍDAS </button>
+
+            <button id="saida"> REGISTRAR SAÍDAS </button>
 
             <a href="/"id="FECHAR">
                 <button> FECHAR </button>
