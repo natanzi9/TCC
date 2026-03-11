@@ -64,14 +64,14 @@ button {
 .quadrado2 {
     background-color: white;
     width: 1000px;
-    height: 500;
+    height: 650px;
     margin-right: 50px;
     border-radius: 25px;
 }
 
 .botaov {
-    margin-top: 12px;
-    margin-left: 1300px;
+    margin-top: -80px;
+    margin-left: 300px;
 }
 
 label {
@@ -149,4 +149,33 @@ textarea {
     border: 1px solid #ccc;
     border-radius: 5px;
     padding: 5px;
+}
+.itensescolhidos {
+    margin-top: 0px;
+    margin-left: 10px;
+}
+
+.item-linha {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    margin-top: 8px;
+}
+
+.input-item {
+    width: 560px !important;
+}
+
+.input-qtde {
+    width: 120px !important;
+}
+@media print {
+    body { background-color: white; }
+    .container, .botaov { display: none; }
+    h1 { color: #135E9F; font-size: 24px; }
+    .quadrados { display: flex !important; flex-direction: row !important; align-items: flex-start; margin: 0; }
+    .quadrado1, .quadrado2 { width: 45%; height: auto; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+    label, input, .checkbox { font-size: 10px; }
+    input { height: 18px; border: none; border-bottom: 1px solid #333; }
+    textarea { height: 30px !important; width: 95% !important; margin-left: 0; font-size: 10px; }
 }

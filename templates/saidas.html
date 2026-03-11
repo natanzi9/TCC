@@ -16,25 +16,11 @@
     <div class="container">
         <img src="static/images.png">
         <div class="navbar">
-
-            <a href="/home">
-                <button id="home"> HOME </button>
-            </a>
-            
-            <a href="/adicionaritens">
-                <button id="itens"> ADICIONAR ITENS</button>
-            </a>
-
-            <a href="/estoque">
-                <button id="estoque"> ESTOQUE </button>
-            </a>
-
+            <a href="/home"><button id="home"> HOME </button></a>
+            <a href="/adicionaritens"><button id="itens"> ADICIONAR ITENS</button></a>
+            <a href="/estoque"><button id="estoque"> ESTOQUE </button></a>
             <button id="saida"> REGISTRAR SAÍDAS </button>
-
-            <a href="/"id="FECHAR">
-                <button> FECHAR </button>
-
-            </a>
+            <a href="/" id="FECHAR"><button> FECHAR </button></a>
         </div>
     </div>
 
@@ -42,7 +28,6 @@
 
     <div class="quadrados">
         <div class="quadrado1">
-
             <label for="solicitante">Nome do solicitante:</label>
             <input type="text" id="solicitante" name="">
 
@@ -77,16 +62,37 @@
 
             <label for="obs">Observações:</label>
             <textarea id="obs" name="obs"></textarea>
-
         </div>
 
         <div class="quadrado2">
-
+            <h1 style="color:#135E9F;">ITENS</h1>
+            <div class="itensescolhidos">
+                <div class="item-linha">
+                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
+                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
+                </div>
+                <div class="item-linha">
+                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
+                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
+                </div>
+                <div class="item-linha">
+                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
+                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
+                </div>
+                <div class="item-linha">
+                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
+                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
+                </div>
+                <div class="item-linha">
+                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
+                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="botaov">
-        <button> Visualizar </button>
+        <button onclick="window.print()"> Visualizar </button>
     </div>
 
 </body>
