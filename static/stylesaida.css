@@ -9,7 +9,8 @@ body {
     align-items: center;
     gap: 5px;
 }
-h1{
+
+h1 {
     color: white;
     font-size: 70px;
     text-align: center;
@@ -34,7 +35,6 @@ img {
 }
 
 button {
-    top: 47px;
     width: 230px;
     height: 50px;
     margin-left: 80px;
@@ -131,34 +131,25 @@ input {
     cursor: pointer;
 }
 
-.checkbox div {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
 textarea {
-    display: block;
-    margin-top: 5px;
-    margin-left: 20px;
     width: 500px;
     height: 120px;
+    margin-left: 50px;
     font-size: 18px;
     cursor: text;
-    resize: none;
     border: 1px solid #ccc;
     border-radius: 5px;
     padding: 5px;
 }
+
 .itensescolhidos {
-    margin-top: 0px;
     margin-left: 10px;
 }
 
 .item-linha {
     display: flex;
     gap: 15px;
-    align-items: flex-end;
+     align-items: flex-end;
     margin-top: 8px;
 }
 
@@ -169,6 +160,7 @@ textarea {
 .input-qtde {
     width: 120px !important;
 }
+
 @media print {
     body { background-color: white; }
     .container, .botaov { display: none; }
@@ -177,5 +169,5 @@ textarea {
     .quadrado1, .quadrado2 { width: 45%; height: auto; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
     label, input, .checkbox { font-size: 10px; }
     input { height: 18px; border: none; border-bottom: 1px solid #333; }
-    textarea { height: 30px !important; width: 95% !important; margin-left: 0; font-size: 10px; }
+    textarea { height: 120px !important; width: 95% !important; margin-left: 0; font-size: 10px; }
 }
