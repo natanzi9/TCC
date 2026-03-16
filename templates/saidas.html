@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAÍDAS DE INSUMOS</title>
-    <link rel="shortcut icon" type="imagex/png" href="static/fiep.jpg">
+    <link rel="shortcut icon" type="image/png" href="static/fiep.jpg">
     <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='main.js') }}" defer></script>
@@ -16,11 +16,27 @@
     <div class="container">
         <img src="static/images.png">
         <div class="navbar">
-            <a href="/home"><button id="home"> HOME </button></a>
-            <a href="/adicionaritens"><button id="itens"> ADICIONAR ITENS</button></a>
-            <a href="/estoque"><button id="estoque"> ESTOQUE </button></a>
-            <button id="saida"> REGISTRAR SAÍDAS </button>
-            <a href="/" id="FECHAR"><button> FECHAR </button></a>
+
+            <a href="/home"><button id="home">
+                    HOME
+                </button></a>
+
+            <a href="/adicionaritens"><button id="itens">
+                    ADICIONAR ITENS
+                </button></a>
+
+            <a href="/estoque"><button id="estoque">
+                    ESTOQUE
+                </button></a>
+
+            <button id="saida">
+                REGISTRAR SAÍDAS
+            </button>
+
+            <a href="/" id="FECHAR">
+                <button> FECHAR </button>
+            </a>
+
         </div>
     </div>
 
