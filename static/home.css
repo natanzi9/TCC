@@ -131,3 +131,39 @@ img {
     top: 650px;
     color: #808080;
 }
+
+.tabela_home {
+    position: absolute;
+    left: 1280px;
+    top: 620px;
+    width: 420px;
+}
+
+.tabela_home table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tabela_home th, .tabela_home td {
+    border: 1px solid #000;
+    padding: 10px 18px;
+    text-align: center;
+}
+
+.tabela_home th {
+    background-color: #F28B0C;
+    color: white;
+    font-size: 16px;
+}
+
+.tabela_home td {
+    font-size: 15px;
+    color: #333;
+}
+
+.tabela_home {
+    position: absolute;
+    left: 1320px;
+    top: 620px;
+    width: 420px;
+}
