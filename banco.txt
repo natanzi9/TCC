@@ -1,39 +1,38 @@
-from flask import Flask, render_template
-import mysql.connector
+CREATE DATABASE tcc_bolado;
+USE tcc_bolado;
 
-app = Flask(__name__)
-def banco():
-    conecxao = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="tcc_bolado"
-    )
-    return conecxao
+CREATE TABLE usuarios (
+    id    INT PRIMARY KEY AUTO_INCREMENT,
+    nome  VARCHAR(255) NOT NULL,
+    senha VARCHAR(255)
+);
 
-@app.route('/')
-def login():
-    return render_template("index.html")
+CREATE TABLE estoque (
+    id        INT PRIMARY KEY AUTO_INCREMENT,
+    iten      VARCHAR(255) NOT NULL,
+    descricao VARCHAR(255),
+    qtde      INT
+);
 
-@app.route('/home')
-def home():
-    return render_template("home.html")
+CREATE TABLE saidas (
+    id         INT PRIMARY KEY AUTO_INCREMENT,
+    iten       VARCHAR(255) NOT NULL,
+    qtde       INT,
+    finalidade VARCHAR(255)
+);
 
-@app.route('/adicionaritens')
-def aditem():
-    return render_template("adicionaritens.html")
+INSERT INTO usuarios (nome, senha) VALUES
+('admin', '$2b$12$gTGGBjNec3.5AaaKWYUmfuFGqHmcMdyRAtzlO6Z5fHhiYYoKQWzY2'),
+('user',  '$2b$12$57uMLowV0hyzdTkSNMONR.rvltSaSqCAiR./LWwxb4UrZ3qyoHGaK');
 
-@app.route('/estoque')
-def estoque():
-    return render_template("estoque.html")
+INSERT INTO estoque (iten, descricao, qtde) VALUES
+('Cabo de Rede', 'Cabo CAT5e 2 metros', 50),
+('Parafuso M4',  'Parafuso de aço M4',  200);
 
-@app.route('/saidas')
-def saidas():
-    return render_template("saidas.html")
+INSERT INTO saidas (iten, qtde, finalidade) VALUES
+('Cabo de Rede', 5, 'Aula do professor Roger'),
+('Parafuso M4',  10, 'Manutenção laboratório');
 
-@app.route('/criarconta')
-def criarconta():                                   
-    return render_template("criarconta.html")       
-
-if __name__ == '__main__':
-    app.run(debug=True, host = '0.0.0.0')    
+SELECT * FROM usuarios;
+SELECT * FROM estoque;
+SELECT * FROM saidas;
