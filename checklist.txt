@@ -5,42 +5,42 @@ CHECKLIST - TCC PARTE 2 | SISTEMA DE ALMOXARIFADO - SENAI
 --------------------------
 [ ] Página de Login com 2 permissões (admin e usuário)
 [ ] Admin tem página extra: cadastro de novos usuários
-[ ] Home: tabela com TODOS os itens do estoque
-[ ] Home: botão ao lado de cada item que abre pop-up com foto (SweetAlert)
-[ ] Página para criação de novos itens (que não existem no banco)
-[ ] Página para entrada/saída de itens com campo de finalidade
-[ ] Na saída: informar qual uso (ex: Aula do professor Roger)
+[X] Home: tabela com TODOS os itens do estoque
+[X] Home: botão ao lado de cada item que abre pop-up com foto (SweetAlert)
+[X] Página para criação de novos itens (que não existem no banco)
+[X] Página para entrada/saída de itens com campo de finalidade
+[X] Na saída: informar qual uso (ex: Aula do professor Roger)
  
 [ ] BANCO DE DADOS (MySQL)
 ---------------------------
-[ ] Tabela de estoque: id (PK), nome, quantidade, estoque mínimo, descrição, preço, foto, categoria
+[X] Tabela de estoque: id (PK), nome, quantidade, estoque mínimo, descrição, preço, foto, categoria
 [ ] Categoria com opções: elétrica / mecânica / geral
 [ ] Tabela de usuários: user, password (hash), permissao (admin/user)
-[ ] Script SQL inicial de criação do banco no GitHub
-[ ] Banco disponível na porta 3306
-[ ] Senhas com hashing usando bcrypt
+[X] Script SQL inicial de criação do banco no GitHub
+[/] Banco disponível na porta 3306 ------------------------------------------------------------------ REVISAR
+[X] Senhas com hashing usando bcrypt
  
-[ ] BACKEND (Flask)
+[X] BACKEND (Flask)
 --------------------
-[ ] Deploy via Flask na porta 5000
-[ ] Acessível por todos na mesma rede
-[ ] Arquivos CSS e JS nas pastas static e templates
-[ ] Usar render_template do Flask corretamente
+[X] Deploy via Flask na porta 5000
+[X] Acessível por todos na mesma rede
+[X] Arquivos CSS e JS nas pastas static e templates
+[X] Usar render_template do Flask corretamente
  
 [ ] FRONTEND (UI/UX)
 ---------------------
-[ ] Navbar na parte superior ou lateral em todas as páginas
-[ ] Cores SENAI: azul, laranja e branco (códigos do site oficial)
-[ ] Todas as páginas com HTML5, CSS e JavaScript
-[ ] Usar SweetAlert 2 para pop-ups
-[ ] Imagens de background em tons da identidade visual
-[ ] Cores extras via modo análogo do colors.adobe.com
+[X] Navbar na parte superior ou lateral em todas as páginas
+[X] Cores SENAI: azul, laranja e branco (códigos do site oficial)
+[X] Todas as páginas com HTML5, CSS e JavaScript
+[X] Usar SweetAlert 2 para pop-ups
+[X] Imagens de background em tons da identidade visual
+[X] Cores extras via modo análogo do colors.adobe.com
  
 [ ] ENTREGA E ORGANIZAÇÃO
 --------------------------
-[ ] Todos os arquivos no GitHub (repositório público)
-[ ] Script SQL no repositório
+[X] Todos os arquivos no GitHub (repositório público)
+[X] Script SQL no repositório
 [ ] Apresentar no 1º dia útil após as férias do meio do semestre
 [ ] Relatório de atividades desenvolvidas
-[ ] Postura profissional: organização, proatividade, trabalho em equipe
+[X] Postura profissional: organização, proatividade, trabalho em equipe
  
