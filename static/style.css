@@ -4,28 +4,35 @@ body {
     padding: 0;
 }
 
-img {
-    width: 464px;
-    height: 118px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+.img-almoxarifa {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 1250px;
+    height: 100vh;
+    object-fit: cover;
+
+}
+
+.logo {
+    width: 600px;
+    height: auto;
     margin-top: 30px;
 }
 
 h1 {
-    color: #045cac;
+    color: #ffffff;
     padding-top: 40px;
     margin-bottom: 0;
 }
 
 .quadrado {
-    background-color: white;
-    position: relative;
-    border-radius: 30px;
-    width: 874px;
-    height: 680px;
-    margin: 0 auto;
+    background-color: #045cac;
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 700px;
+    height: 100vh;
     text-align: center;
     font-size: 35px;
     font-family: Arial, Helvetica, sans-serif;
@@ -33,6 +40,7 @@ h1 {
 
 .input1 {
     font-size: 30px;
+    color: #ffffff;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     margin: 0 auto;
     padding-top: 80px;
@@ -42,6 +50,7 @@ h1 {
 
 .input2 {
     font-size: 30px;
+    color: #ffffff;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     margin: 40px auto 0 auto;
     width: fit-content;
@@ -58,13 +67,13 @@ input[type="password"] {
 }
 
 button {
-    background-color: #135E9F;
+    background-color: #F28B0C;
     border-radius: 6px;
     width: 200px;
     height: 70px;
     font-size: 25px;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    color: whitesmoke;
+    color: #1F3473;
     border: none;
     cursor: pointer;
     display: block;
@@ -73,7 +82,7 @@ button {
 
 a {
     font-size: 20px;
-    color: #135E9F;
+    color: #F28B0C;
     display: block;
     margin-top: 25px;
     text-decoration: none;

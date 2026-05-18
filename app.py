@@ -1,6 +1,15 @@
 from flask import Flask, render_template
+import mysql.connector
 
 app = Flask(__name__)
+def banco():
+    conecxao = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="sua_senha",
+        database="nome_do_banco"
+    )
+    return conecxao
 
 @app.route('/')
 def login():
