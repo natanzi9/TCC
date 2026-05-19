@@ -13,16 +13,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputLogin = document.getElementById('login');
     const inputSenha = document.getElementById('senha');
 
-    // Verifica se os elementos existem na página atual
     if (!checkUser || !linkCriar) return;
 
     function verificar() {
-        const loginPreenchido = inputLogin.value.trim() !== '';
-        const senhaPreenchida = inputSenha.value.trim() !== '';
+        const loginCorreto = inputLogin.value.toLowerCase() === 'administrador';
+        const senhaCorreta = inputSenha.value === 'senai2026';
         const isAdm = checkAdm.checked;
 
-        // Regra: Só libera o link se for ADM e os campos estiverem preenchidos
-        const podeCriar = isAdm && loginPreenchido && senhaPreenchida;
+        const podeCriar = isAdm && loginCorreto && senhaCorreta;
 
         if (podeCriar) {
             linkCriar.style.pointerEvents = 'auto';
@@ -48,6 +46,5 @@ document.addEventListener('DOMContentLoaded', function() {
     inputLogin.addEventListener('input', verificar);
     inputSenha.addEventListener('input', verificar);
 
-    // Executa ao carregar para definir o estado inicial
     verificar();
 });
