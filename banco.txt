@@ -12,13 +12,17 @@ CREATE TABLE estoque (
     iten      VARCHAR(255) NOT NULL,
     descricao VARCHAR(255),
     qtde      INT
+
 );
 
 CREATE TABLE saidas (
     id         INT PRIMARY KEY AUTO_INCREMENT,
     iten       VARCHAR(255) NOT NULL,
     qtde       INT,
-    finalidade VARCHAR(255)
+    descricao VARCHAR(255),
+    preco DOUBLE,
+    categoria VARCHAR(255),
+    estoque_min INT,
 );
 
 INSERT INTO usuarios (nome, senha) VALUES
