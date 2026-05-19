@@ -45,12 +45,13 @@ img {
     background-color: white;
     border-radius: 50px;
     width: 874px;
-    height: 650px;
-    margin: 100px auto;
+    height: auto; 
+    margin: 50px auto; 
     text-align: center;
     font-size: 35px;
     font-family: Arial, Helvetica, sans-serif;
     padding-top: 10px;
+    padding-bottom: 40px; 
     box-sizing: border-box;
 }
 
@@ -65,26 +66,28 @@ label {
     text-align: left;
     width: 700px;
     margin-left: 100px;
-
 }
 
 .input1,
 .input2,
 .input3,
-.input4 {
+.input4,
+.input5,
+.input6,
+.input7 {
     display: block;
-    margin: 18px auto;
+    margin: 8px auto 20px auto; 
     width: 700px;
     height: 40px;
     border-radius: 8px;
     border: 2px solid #045cac;
     font-size: 20px;
-    padding:5px;
+    padding: 5px;
     box-sizing: border-box;
 }
 
 .botoes {
-    margin-top: 20px;
+    margin-top: 30px;
     display: flex;
     justify-content: center;
     gap: 20px;
@@ -92,7 +95,7 @@ label {
 
 .botoes button {
     width: 250px;
-    height: 80px;
+    height: 65px;
     border-radius: 50px;
     font-size: 25px;
     background-color: white;
