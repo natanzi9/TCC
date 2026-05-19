@@ -48,7 +48,7 @@ def apilogin():
     cursor = conexao.cursor()
 
     cursor.execute(
-        "SELECT * FROM almoxarifado WHERE usuario = %s AND senha = %s",
+        "SELECT * FROM adiministrador WHERE usuario = %s AND senha = %s",
         (username, senha)
     )
 
