@@ -1,0 +1,22 @@
+CREATE DATABASE SistemaFiep;
+USE SistemaFiep;
+
+-- Tabela de administradores (login)
+CREATE TABLE adiministrador (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(180) NOT NULL,
+    senha VARCHAR(255)
+);
+
+-- Tabela de usuários criados pelo sistema
+CREATE TABLE almoxarifado (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(180) NOT NULL,
+    senha VARCHAR(255)
+);
+
+-- Insere o admin com senha em texto puro por enquanto
+INSERT INTO adiministrador (usuario, senha)
+VALUES ('AMP', '123321456654AMP');
+
+select*from almoxarifado;
