@@ -18,28 +18,33 @@
 
         <h1>CRIAR CONTA</h1>
 
-        <div>
-            <label for="username"><strong>Usuário</strong></label>
-            <input class="input1" type="text" id="username" name="username" placeholder="">
-        </div>
+        
+<form action="/efetuarcadastro" method="POST">
 
-        <div>
-            <label for="senha"><strong>Senha</strong></label>
-            <input class="input2" type="password" id="senha" name="senha" placeholder="">
-        </div>
+    <div>
+        <label for="username"><strong>Usuário</strong></label>
+        <input class="input1" type="text" id="username" name="username">
+    </div>
 
-        <div>
-            <label for="confirmar"><strong>CONFIRMAR SENHA</strong></label>
-            <input class="input3" type="password" id="confirmar" name="confirmar" placeholder="">
-        </div>
+    <div>
+        <label for="senha"><strong>Senha</strong></label>
+        <input class="input2" type="password" id="senha" name="senha">
+    </div>
 
-        <div class="parabens">
-            <button onclick="a()">Criar conta</button>
-        </div>
+    <div>
+        <label for="confirmar"><strong>CONFIRMAR SENHA</strong></label>
+        <input class="input3" type="password" id="confirmar" name="confirmar">
+    </div>
 
-        <div class="voltar">
-            <a href="/"><button><i>Volte para o login</i></button></a>
-        </div>
+    <div class="parabens">
+        <button type="submit"><i>Criar conta</i></button>
+    </div>
+
+    <div class="voltar">
+        <a href="/"><button type="button"><i>Volte para o login</i></button></a>
+    </div>
+
+</form>
 
     </div>
 </body>

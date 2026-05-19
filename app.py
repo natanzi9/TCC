@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import mysql.connector
 
 app = Flask(__name__)
@@ -7,7 +7,7 @@ def banco():
         host="localhost",
         user="root",
         password="",
-        database="tcc_bolado"
+        database="SistemaFiep"
     )
     return conecxao
 
@@ -33,7 +33,35 @@ def saidas():
 
 @app.route('/criarconta')
 def criarconta():                                   
-    return render_template("criarconta.html")       
+    return render_template("criarconta.html")
 
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    senha = request.form['senha']
+
+    conexao = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="SistemaFiep"
+    )
+
+    cursor = conexao.cursor()
+
+    cursor.execute(
+        "SELECT * FROM almoxarifado WHERE usuario = %s AND senha = %s",
+        (username, senha)
+    )
+
+    usuario = cursor.fetchone()
+
+    cursor.close()
+    conexao.close()
+
+    if usuario:
+        return render_template("home.html")
+    else:
+        return render_template("index.html", erro="Usuário ou senha inválidos")
 if __name__ == '__main__':
-    app.run(debug=True, host = '0.0.0.0')    
+    app.run(debug=True, host = '0.0.0.0')

@@ -30,6 +30,58 @@
             <input type="password" id="senha" name="nome" placeholder="Digite sua Senha">
         </div>
 
+        <div class="permissao">
+            <label><input type="checkbox" id="checkUser" checked> User</label>
+            <label><input type="checkbox" id="checkAdm"> ADM</label>
+        </div>
+
+    <a href="/home">
+        <button id="ENTRAR">
+            ENTRAR
+        </button>
+    </a>
+
+    <a href="/criarconta" id="linkCriar"><strong><em>Crie uma conta</em></strong></a>
+
+</body>
+
+</html><!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGIN</title>
+    <link rel="shortcut icon" type="image/png" href="static/fiep.jpg">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='main.js') }}" defer></script>
+</head>
+
+<body>
+
+    <img class="img-almoxarifa" src="{{ url_for('static', filename='almoxarifa.jpg') }}">
+    <div class="quadrado">
+        <img class="logo" src="{{ url_for('static', filename='images.png') }}">
+        <h1>SGA SENAI</h1>
+
+        <div class="input1">
+            <label for="login"><strong>Username:</strong></label>
+            <br>
+            <input type="text" id="login" name="nome" placeholder="Digite seu login">
+        </div>
+
+        <div class="input2">
+            <label for="senha"><strong>SENHA:</strong></label>
+            <br>
+            <input type="password" id="senha" name="nome" placeholder="Digite sua Senha">
+        </div>
+
+        <div class="permissao">
+            <label><input type="checkbox" id="checkUser" checked> User</label>
+            <label><input type="checkbox" id="checkAdm"> ADM</label>
+        </div>
+
         <a href="/home">
             <button id="ENTRAR">
                 ENTRAR
@@ -38,6 +90,11 @@
 
         <a href="/criarconta"><strong><em>Crie uma conta</em></strong></a>
     </div>
+<form method="POST" action="/login">
+    <input type="text" name="username" placeholder="Usuário">
+    <input type="password" name="senha" placeholder="Senha">
+    <button type="submit">Entrar</button>
+</form>
 
 </body>
 

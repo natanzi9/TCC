@@ -87,3 +87,18 @@ a {
     margin-top: 25px;
     text-decoration: none;
 }
+.permissao {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 25px;
+    color: #F28B0C;
+    font-size: 22px;
+}
+
+.permissao input[type="checkbox"] {
+    width: auto;
+    margin-right: 6px;
+    cursor: pointer;
+    accent-color: #F28B0C;
+}
