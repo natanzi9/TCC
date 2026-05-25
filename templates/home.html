@@ -58,22 +58,27 @@
             <tr>
                 <th>ITEM</th>
                 <th>QTDE</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
+            {% for item in ultimos %}
             <tr>
-                <td>MAKITA</td>
-                <td>6691</td>
-<th>
-    <button onclick="Swal.fire({ imageUrl: 'static/MAKITA.webp', imageHeight: 400, imageAlt: 'Imagem do item' })" style="background: none; border: none; cursor: pointer;">
-        <img src="static/icone de imagem.png" style="width: 30px; height: 30px;">
-    </button>
-</th>
+                <td>{{ item.nome }}</td>
+                <td>{{ item.quantidade }}</td>
+                <td>
+                    {% if item.imagem %}
+                        <button class="btn-foto" onclick="Swal.fire({ imageUrl: '/static/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' })">
+                            <img src="{{ url_for('static', filename='icone de imagem.png') }}">
+                        </button>
+                    {% else %}
+                    <span style="color: gray; font-size: 12px;">sem foto</span>
+                    {% endif %}
+                </td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>
-    </div>
-    </div>
 </body>
 </html>

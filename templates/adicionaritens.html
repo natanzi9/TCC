@@ -38,48 +38,49 @@
 
     <div class="quadrado">
 
-        <h1>ADICIONAR ITENS</h1>
+    <h1>ADICIONAR ITENS</h1>
+
+    <form method="POST" action="/api/adicionaritem">
 
         <div>
-            <label for="nome"><strong>NOME</strong></label>
-            <input class="input1" type="text" id="nome" name="nome" placeholder="">
+            <label><strong>NOME</strong></label>
+            <input class="input1" type="text" name="nome" required>
         </div>
 
         <div>
-            <label for="categoria"><strong>CATEGORIA</strong></label>
-            <input class="input5" type="text" id="categoria" name="categoria" placeholder="">
+            <label><strong>CATEGORIA</strong></label>
+            <input class="input5" type="text" name="categoria" required>
         </div>
 
         <div>
-            <label for="descricao"><strong>DESCRIÇÃO</strong></label>
-            <input class="input2" type="text" id="descricao" name="descricao" placeholder="">
+            <label><strong>DESCRIÇÃO</strong></label>
+            <input class="input2" type="text" name="descricao" required>
         </div>
 
         <div>
-            <label for="preco"><strong>PREÇO</strong></label>
-            <input class="input6" type="text" id="preco" name="preco" placeholder="">
+            <label><strong>PREÇO</strong></label>
+            <input class="input6" type="number" step="0.01" name="preco" required>
         </div>
 
         <div>
-            <label for="quantidade"><strong>QUANTIDADE</strong></label>
-            <input class="input3" type="text" id="quantidade" name="quantidade" placeholder="">
+            <label><strong>QUANTIDADE</strong></label>
+            <input class="input3" type="number" name="quantidade" required>
         </div>
 
         <div>
-            <label for="estoqueminimo"><strong>ESTOQUE MÍNIMO</strong></label>
-            <input class="input7" type="text" id="estoqueminimo" name="estoqueminimo" placeholder="">
-        </div>
-
-        <div>
-            <label for="iditem"><strong>ID DO ITEM</strong></label>
-            <input class="input4" type="text" id="iditem" name="iditem" placeholder="">
+            <label><strong>ESTOQUE MÍNIMO</strong></label>
+            <input class="input7" type="number" name="estoqueminimo" required>
         </div>
 
         <div class="botoes">
-            <button><strong>ADICIONAR</strong></button>
+            <button type="submit">
+                <strong>ADICIONAR</strong>
+            </button>
         </div>
 
-    </div>
+    </form>
+
+</div>
 
 </body>
 

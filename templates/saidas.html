@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='stylesaida.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='main.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='saidas.js') }}" defer></script>
 </head>
 
 <body onload="saida()">
@@ -16,51 +17,36 @@
     <div class="container">
         <img src="static/images.png">
         <div class="navbar">
-
-            <a href="/home"><button id="home">
-                    HOME
-                </button></a>
-
-            <a href="/adicionaritens"><button id="itens">
-                    ADICIONAR ITENS
-                </button></a>
-
-            <a href="/estoque"><button id="estoque">
-                    ESTOQUE
-                </button></a>
-
-            <button id="saida">
-                REGISTRAR SAÍDAS
-            </button>
-
-            <a href="/" id="FECHAR">
-                <button> FECHAR </button>
-            </a>
-
+            <a href="/home"><button id="home">HOME</button></a>
+            <a href="/adicionaritens"><button id="itens">ADICIONAR ITENS</button></a>
+            <a href="/estoque"><button id="estoque">ESTOQUE</button></a>
+            <button id="saida">REGISTRAR SAÍDAS</button>
+            <a href="/"><button>FECHAR</button></a>
         </div>
     </div>
 
-    <h1> SAÍDAS DE INSUMOS </h1>
+    <h1>SAÍDAS DE INSUMOS</h1>
 
     <div class="quadrados">
+
         <div class="quadrado1">
             <label for="solicitante">Nome do solicitante:</label>
-            <input type="text" id="solicitante" name="">
+            <input type="text" id="solicitante">
 
             <label for="almoxarife">Nome do almoxarife:</label>
-            <input type="text" id="almoxarife" name="">
+            <input type="text" id="almoxarife">
 
-            <label for="data">Data de retirada (se ter):</label>
-            <input type="date" id="data" name="">
+            <label for="data">Data de retirada:</label>
+            <input type="date" id="data">
 
             <div class="inputs">
                 <div>
-                    <label for="id">ID do item:</label>
-                    <input type="text" id="id" name="">
+                    <label for="id_item">ID do item:</label>
+                    <input type="text" id="id_item">
                 </div>
                 <div>
                     <label for="qtde">QTDE:</label>
-                    <input type="text" id="qtde" name="">
+                    <input type="text" id="qtde">
                 </div>
             </div>
 
@@ -77,40 +63,37 @@
             </div>
 
             <label for="obs">Finalidade:</label>
-            <textarea id="obs" name="obs"></textarea>
+            <textarea id="obs"></textarea>
+
+            <div class="botoes-acao">
+                <button class="btn-adicionar" onclick="adicionarNaTabela()">ADICIONAR</button>
+                <button class="btn-registrar" onclick="registrarSaida()">REGISTRAR</button>
+            </div>
         </div>
 
         <div class="quadrado2">
-            <h1 style="color:#135E9F;">ITENS</h1>
-            <div class="itensescolhidos">
-                <div class="item-linha">
-                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
-                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
-                </div>
-                <div class="item-linha">
-                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
-                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
-                </div>
-                <div class="item-linha">
-                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
-                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
-                </div>
-                <div class="item-linha">
-                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
-                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
-                </div>
-                <div class="item-linha">
-                    <div><label>Item:</label><input type="text" class="input-item" name=""></div>
-                    <div><label>Qtde:</label><input type="text" class="input-qtde" name=""></div>
-                </div>
+            <h1 style="color:#135E9F; font-size: 36px; text-align:center; margin-top: 20px;">ITENS ADICIONADOS</h1>
+            <div class="tabela-wrapper">
+                <table class="tabela-saida">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ITEM</th>
+                            <th>QTDE</th>
+                            <th class="col-remover">REMOVER</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela">
+                    </tbody>
+                </table>
             </div>
         </div>
+
     </div>
 
     <div class="botaov">
-        <button onclick="window.print()"> Visualizar </button>
+        <button onclick="window.print()">Visualizar</button>
     </div>
 
 </body>
-
 </html>

@@ -167,3 +167,15 @@ img {
     top: 620px;
     width: 420px;
 }
+.btn-foto {
+    background-color: #F28B0C;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.btn-foto img {
+    width: 22px !important;   /* ← força o tamanho, ignora o img global */
+    height: 22px !important;
+}

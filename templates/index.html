@@ -1,3 +1,4 @@
+index:
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -17,7 +18,7 @@
         <img class="logo" src="{{ url_for('static', filename='images.png') }}">
         <h1>SGA SENAI</h1>
 
-        <form method="POST" action="/login">
+        <form method="POST" action="/api/login">
             <div class="input1">
                 <label for="login"><strong>Username:</strong></label><br>
                 <input type="text" id="login" name="username" placeholder="Digite seu login" required>
@@ -33,7 +34,7 @@
                 <label><input type="checkbox" id="checkAdm" name="tipo" value="adm"> ADM</label>
             </div>
 
-            <button type="submit" id="ENTRAR">ENTRAR</button>
+           <button type="submit" id="ENTRAR">ENTRAR</button>
         </form>
 
         <div style="margin-top: 15px;">
