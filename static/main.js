@@ -1,4 +1,3 @@
-
 function colorir() {
     document.getElementById("home").style.border = "2px solid #045cac";
 }
@@ -15,7 +14,6 @@ function saida() {
     document.getElementById("saida").style.border = "2px solid #045cac";
 }
 
-
 function a() {
     Swal.fire({
         title: "CONTA CRIADA COM SUCESSO",
@@ -24,9 +22,7 @@ function a() {
     });
 }
 
-
 document.addEventListener('DOMContentLoaded', function () {
-
     const checkUser  = document.getElementById('checkUser');
     const checkAdm   = document.getElementById('checkAdm');
     const linkCriar  = document.getElementById('linkCriar');
@@ -68,6 +64,59 @@ document.addEventListener('DOMContentLoaded', function () {
     verificar();
 });
 
+function mostrarPreview(input) {
+    const nome = input.files[0] ? input.files[0].name : '';
+    document.getElementById('nomeArquivo').textContent = nome ? '📎 ' + nome : '';
+
+    if (input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const preview = document.getElementById('previewImagem');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function abrirAlterar() {
+    Swal.fire({
+        title: 'Digite o ID do item',
+        input: 'number',
+        inputPlaceholder: 'Ex: 1',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Buscar',
+        confirmButtonColor: '#045cac'
+    }).then(result => {
+        if (!result.isConfirmed || !result.value) return;
+
+        const id = result.value;
+
+        fetch(`/api/item_completo/${id}`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.nome) {
+                    Swal.fire({ icon: 'error', title: 'Item não encontrado!' });
+                    return;
+                }
+
+                document.getElementById('campo_nome').value          = data.nome;
+                document.getElementById('campo_categoria').value     = data.categoria;
+                document.getElementById('campo_descricao').value     = data.descricao;
+                document.getElementById('campo_preco').value         = data.preco;
+                document.getElementById('campo_quantidade').value    = data.quantidade;
+                document.getElementById('campo_estoqueminimo').value = data.estoque_min;
+
+                document.getElementById('tituloPagina').textContent  = 'ALTERAR ITEM';
+                document.getElementById('formItem').action           = `/api/alteraritem/${id}`;
+                document.getElementById('btnAdicionar').innerHTML    = '<strong>SALVAR</strong>';
+
+                Swal.fire({ icon: 'success', title: `Item "${data.nome}" carregado!`, timer: 1500, showConfirmButton: false });
+            })
+            .catch(() => Swal.fire({ icon: 'error', title: 'Erro ao buscar item!' }));
+    });
+}
 
 function adicionarNaTabela() {
     const id_item = document.getElementById('id_item').value.trim();
@@ -105,7 +154,6 @@ function adicionarNaTabela() {
         })
         .catch(() => Swal.fire({ icon: 'error', title: 'Erro ao buscar item!' }));
 }
-
 
 function removerLinha(id) {
     const tr = document.getElementById(id);

@@ -218,6 +218,59 @@ def api_registrarsaida():
 
     return jsonify({'ok': True})
 
+@app.route('/api/item_completo/<int:id>')
+def api_item_completo(id):
+    conexao = banco()
+    cursor = conexao.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM estoque WHERE id = %s", (id,))
+    item = cursor.fetchone()
+    cursor.close()
+    conexao.close()
+    return jsonify(item if item else {})
+
+
+# ========== ALTERAR ITEM ==========
+@app.route('/api/alteraritem/<int:id>', methods=['POST'])
+def alteraritem(id):
+    nome          = request.form['nome']
+    categoria     = request.form['categoria']
+    descricao     = request.form['descricao']
+    preco         = request.form['preco']
+    quantidade    = request.form['quantidade']
+    estoqueminimo = request.form['estoqueminimo']
+
+    imagem = request.files.get('imagem')
+    conexao = banco()
+    cursor = conexao.cursor()
+
+    if imagem and imagem.filename != '':
+        caminho_imagem = imagem.filename
+        imagem.save(os.path.join(app.config['UPLOAD_FOLDER'], imagem.filename))
+        cursor.execute(
+            """UPDATE estoque SET nome=%s, categoria=%s, descricao=%s,
+               preco=%s, quantidade=%s, estoque_min=%s, imagem=%s
+               WHERE id=%s""",
+            (nome, categoria, descricao, preco, quantidade, estoqueminimo, caminho_imagem, id)
+        )
+    else:
+        cursor.execute(
+            """UPDATE estoque SET nome=%s, categoria=%s, descricao=%s,
+               preco=%s, quantidade=%s, estoque_min=%s
+               WHERE id=%s""",
+            (nome, categoria, descricao, preco, quantidade, estoqueminimo, id)
+        )
+
+    conexao.commit()
+    cursor.close()
+    conexao.close()
+
+    return """
+    <script>
+        alert("Item alterado com sucesso!");
+        window.location.href = "/estoque";
+    </script>
+    """
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

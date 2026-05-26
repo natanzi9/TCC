@@ -16,72 +16,61 @@
     <div class="container">
         <img src="static/images.png">
         <div class="navbar">
-
-            <a href="/home" id="home">
-                <button> HOME </button>
-            </a>
-            <button id="itens"> ADICIONAR ITENS</button>
-
-            <a href="/estoque">
-                <button> ESTOQUE </button>
-            </a>
-
-            <a href="/saidas">
-                <button> REGISTRAR SAÍDAS </button>
-            </a>
-            <a href="/">
-                <button> FECHAR </button>
-            </a>
+            <a href="/home"><button id="home">HOME</button></a>
+            <button id="itens">ADICIONAR ITENS</button>
+            <a href="/estoque"><button>ESTOQUE</button></a>
+            <a href="/saidas"><button>REGISTRAR SAÍDAS</button></a>
+            <a href="/"><button>FECHAR</button></a>
         </div>
     </div>
 
-
     <div class="quadrado">
+        <h1 id="tituloPagina">ADICIONAR ITENS</h1>
 
-    <h1>ADICIONAR ITENS</h1>
+        <form id="formItem" method="POST" action="/api/adicionaritem" enctype="multipart/form-data">
 
-    <form method="POST" action="/api/adicionaritem">
+            <div>
+                <label><strong>NOME</strong></label>
+                <input class="input1" type="text" id="campo_nome" name="nome" required>
+            </div>
+            <div>
+                <label><strong>CATEGORIA</strong></label>
+                <input class="input5" type="text" id="campo_categoria" name="categoria" required>
+            </div>
+            <div>
+                <label><strong>DESCRIÇÃO</strong></label>
+                <input class="input2" type="text" id="campo_descricao" name="descricao" required>
+            </div>
+            <div>
+                <label><strong>PREÇO</strong></label>
+                <input class="input6" type="number" step="0.01" id="campo_preco" name="preco" required>
+            </div>
+            <div>
+                <label><strong>QUANTIDADE</strong></label>
+                <input class="input3" type="number" id="campo_quantidade" name="quantidade" required>
+            </div>
+            <div>
+                <label><strong>ESTOQUE MÍNIMO</strong></label>
+                <input class="input7" type="number" id="campo_estoqueminimo" name="estoqueminimo" required>
+            </div>
 
-        <div>
-            <label><strong>NOME</strong></label>
-            <input class="input1" type="text" name="nome" required>
-        </div>
+            <div style="text-align:center; margin-top: 8px;">
+                <span id="nomeArquivo" style="color: #045cac; font-size: 15px;"></span>
+                <img id="previewImagem" src="" alt=""
+                     style="display:none; margin: 10px auto; max-width: 200px; max-height: 200px;
+                            border-radius: 10px; border: 2px solid #045cac;">
+            </div>
 
-        <div>
-            <label><strong>CATEGORIA</strong></label>
-            <input class="input5" type="text" name="categoria" required>
-        </div>
+            <div class="botoes">
+                <label for="inputImagem" class="btn-imagem">📷 IMAGEM</label>
+                <input type="file" id="inputImagem" name="imagem" accept="image/*"
+                       style="display:none" onchange="mostrarPreview(this)">
+                <button type="submit" id="btnAdicionar"><strong>ADICIONAR</strong></button>
+                <button type="button" onclick="abrirAlterar()"><strong>ALTERAR ITEM</strong></button>
+            </div>
 
-        <div>
-            <label><strong>DESCRIÇÃO</strong></label>
-            <input class="input2" type="text" name="descricao" required>
-        </div>
-
-        <div>
-            <label><strong>PREÇO</strong></label>
-            <input class="input6" type="number" step="0.01" name="preco" required>
-        </div>
-
-        <div>
-            <label><strong>QUANTIDADE</strong></label>
-            <input class="input3" type="number" name="quantidade" required>
-        </div>
-
-        <div>
-            <label><strong>ESTOQUE MÍNIMO</strong></label>
-            <input class="input7" type="number" name="estoqueminimo" required>
-        </div>
-
-        <div class="botoes">
-            <button type="submit">
-                <strong>ADICIONAR</strong>
-            </button>
-        </div>
-
-    </form>
-
-</div>
+        </form>
+    </div>
 
 </body>
-
 </html>

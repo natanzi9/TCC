@@ -89,10 +89,10 @@ label {
 .botoes {
     margin-top: 30px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 20px;
+    padding-right: 90px;
 }
-
 .botoes button {
     width: 250px;
     height: 65px;
@@ -107,4 +107,19 @@ label {
 
 .botoes a {
     text-decoration: none;
+}
+.btn-imagem {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 250px;
+    height: 58px;
+    border-radius: 50px;
+    font-size: 20px;
+    font-weight: bold;
+    background-color: white;
+    border: 4px solid #045cac;
+    color: #045cac;
+    cursor: pointer;
+    transition: 0.2s;
 }
