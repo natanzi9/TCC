@@ -220,19 +220,19 @@ def api_registrarsaida():
 
     for item in itens:
         cursor.execute(
-            """INSERT INTO saidas (item, qtde, descricao, categoria)
-               VALUES (%s, %s, %s, %s)""",
-            (item['nome'], item['qtde'], obs, devolucao)
+            """INSERT INTO saidas (item, qtde, descricao, categoria, solicitante, almoxarife, data, devolucao)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+            (
+                item['nome'],
+                item['qtde'],
+                obs,
+                devolucao,
+                dados.get('solicitante'),
+                dados.get('almoxarife'),
+                dados.get('data') or None,
+                devolucao
+            )
         )
-        cursor.execute(
-            "UPDATE estoque SET quantidade = quantidade - %s WHERE id = %s",
-            (item['qtde'], item['id'])
-        )
-
-    conexao.commit()
-    cursor.close()
-    conexao.close()
-
     return jsonify({'ok': True})
 
 @app.route('/api/item_completo/<int:id>')

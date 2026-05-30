@@ -26,13 +26,15 @@ CREATE TABLE estoque (
 );
 
 CREATE TABLE saidas (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    item VARCHAR(255) NOT NULL,
-    qtde INT,
-    descricao VARCHAR(255),
-    preco DOUBLE,
-    categoria VARCHAR(255),
-    estoque_min INT
+    id           INT PRIMARY KEY AUTO_INCREMENT,
+    item         VARCHAR(255) NOT NULL,
+    qtde         INT,
+    descricao    VARCHAR(255),
+    categoria    VARCHAR(255),
+    solicitante  VARCHAR(255),
+    almoxarife   VARCHAR(255),
+    data         DATE,
+    devolucao    VARCHAR(10)
 );
 
 UPDATE estoque SET imagem = 'faparuso.jpg' WHERE id = 1;
