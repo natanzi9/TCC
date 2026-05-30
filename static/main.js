@@ -29,24 +29,31 @@ document.addEventListener('DOMContentLoaded', function () {
     const inputLogin = document.getElementById('login');
     const inputSenha = document.getElementById('senha');
 
-    if (!checkUser || !linkCriar) return;
+   function verificar() {
+    const loginCorreto = inputLogin.value.toLowerCase() === 'administrador';
+    const senhaCorreta = inputSenha.value === 'senai2026';
+    const isAdm        = checkAdm.checked;
+    const isUser       = checkUser.checked;
 
-    function verificar() {
-        const loginCorreto = inputLogin.value.toLowerCase() === 'administrador';
-        const senhaCorreta = inputSenha.value === 'senai2026';
-        const isAdm        = checkAdm.checked;
-        const podeCriar    = isAdm && loginCorreto && senhaCorreta;
+    // adm: precisa marcar ADM + login e senha corretos
+    // user: precisa marcar USER + login NÃO pode ser administrador
+    const podeEntrar =
+        (isAdm && loginCorreto && senhaCorreta) ||
+        (isUser && !loginCorreto);
 
-        if (podeCriar) {
-            linkCriar.style.pointerEvents = 'auto';
-            linkCriar.style.opacity       = '1';
-            linkCriar.style.cursor        = 'pointer';
-        } else {
-            linkCriar.style.pointerEvents = 'none';
-            linkCriar.style.opacity       = '0.4';
-            linkCriar.style.cursor        = 'not-allowed';
-        }
+    // libera o link de criar conta só se for adm com credenciais certas
+    const podeCriar = isAdm && loginCorreto && senhaCorreta;
+
+    if (podeCriar) {
+        linkCriar.style.pointerEvents = 'auto';
+        linkCriar.style.opacity       = '1';
+        linkCriar.style.cursor        = 'pointer';
+    } else {
+        linkCriar.style.pointerEvents = 'none';
+        linkCriar.style.opacity       = '0.4';
+        linkCriar.style.cursor        = 'not-allowed';
     }
+}
 
     checkUser.addEventListener('change', function () {
         if (this.checked) checkAdm.checked = false;

@@ -63,29 +63,46 @@ def criarconta():
 @app.route('/api/login', methods=['POST'])
 def apilogin():
     username = request.form['username']
-    senha = request.form['senha']
+    senha    = request.form['senha']
+    tipo     = request.form.get('tipo', '')
 
-    # Verifica adm direto — sem precisar do banco
-    if username.lower() == 'administrador' and senha == 'senai2026':
-        session['usuario'] = username
-        session['tipo'] = 'adm'
-        return redirect(url_for('home'))
+    # Se marcou ADM: só entra com administrador/senai2026
+    if tipo == 'adm':
+        if username.lower() == 'administrador' and senha == 'senai2026':
+            session['usuario'] = username
+            session['tipo']    = 'adm'
+            return redirect(url_for('home'))
+        else:
+            return """
+            <script>
+                alert("Credenciais de administrador incorretas");
+                window.location.href = "/";
+            </script>
+            """
 
-    # Verifica usuários cadastrados no banco
-    conexao = banco()
-    cursor = conexao.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT * FROM usuario WHERE usuario = %s AND senha = %s",
-        (username, senha)
-    )
-    usuario = cursor.fetchone()
-    cursor.close()
-    conexao.close()
+    # Se marcou USER: não pode entrar como administrador
+    if tipo == 'user':
+        if username.lower() == 'administrador':
+            return """
+            <script>
+                alert("Use o tipo ADM para entrar como administrador");
+                window.location.href = "/";
+            </script>
+            """
+        conexao = banco()
+        cursor  = conexao.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT * FROM usuario WHERE usuario = %s AND senha = %s",
+            (username, senha)
+        )
+        usuario = cursor.fetchone()
+        cursor.close()
+        conexao.close()
 
-    if usuario:
-        session['usuario'] = username
-        session['tipo'] = 'user'
-        return redirect(url_for('home'))
+        if usuario:
+            session['usuario'] = username
+            session['tipo']    = 'user'
+            return redirect(url_for('home'))
 
     return """
     <script>
