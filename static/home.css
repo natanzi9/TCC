@@ -16,7 +16,7 @@ img {
 
 .navbar {
     background-color: white;
-    width: 1510px;
+    width: 1510PX;
     height: 75px;
     display: flex;
     align-items: center;
@@ -69,7 +69,8 @@ img {
     border-radius: 20px;
     padding: 30px;
     box-sizing: border-box;
-    margin-top: 150px;
+    overflow-y: auto;
+    max-height: 500px;
 }
 
 .resumo-estoque {
@@ -78,9 +79,16 @@ img {
     margin-bottom: 20px;
 }
 
+.tabelas_container {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px 40px;
+}
+
 .tabela_home {
-    width: 700px;
-    margin: 0 auto;
+    flex: 1;
 }
 
 .tabela_home table {
@@ -90,7 +98,7 @@ img {
 
 .tabela_home th, .tabela_home td {
     border: 1px solid #000;
-    padding: 10px 18px;
+    padding: 12px 20px;
     text-align: center;
 }
 

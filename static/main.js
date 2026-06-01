@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
    function verificar() {
     const loginCorreto = inputLogin.value.toLowerCase() === 'admin';
-    const senhaCorreta = inputSenha.value === 'senai2026';
+    const senhaCorreta = inputSenha.value === '123';
     const isAdm        = checkAdm.checked;
     const isUser       = checkUser.checked;
 
@@ -186,26 +186,60 @@ function registrarSaida() {
         });
     });
 
-    const solicitante = document.getElementById('solicitante').value.trim();
-    const almoxarife  = document.getElementById('almoxarife').value.trim();
-    const data        = document.getElementById('data').value;
-    const obs         = document.getElementById('obs').value.trim();
-    const devolucao   = document.getElementById('sim').checked ? 'Sim' : 'Não';
+    // --- CORREÇÃO DOS CAMPOS CONFORME O SEU PRINT ---
+    const solicitante = document.getElementById('solicitante') ? document.getElementById('solicitante').value.trim() : '';
+    const almoxarife  = document.getElementById('almoxarife') ? document.getElementById('almoxarife').value.trim() : '';
+    
+    // ATENÇÃO: Verifique se o ID no HTML da data é 'data' ou 'data_retirada'
+    const campoData = document.getElementById('data') || document.getElementById('data_retirada');
+    const data = campoData ? campoData.value : null;
+    
+    // ATENÇÃO: No print está "Finalidade". Verifique se o ID no seu HTML é 'obs' ou 'finalidade'
+    const campoObs = document.getElementById('obs') || document.getElementById('finalidade');
+    const obs = campoObs ? campoObs.value.trim() : '';
+
+    // --- CORREÇÃO DO SIM / NÃO ---
+    // Procura pelo ID 'sim'. Se não achar, tenta achar pelo name ou assume 'Não'
+    const checkboxSim = document.getElementById('sim');
+    const devolucao = (checkboxSim && checkboxSim.checked) ? 'Sim' : 'Não';
+
+    // Monta o objeto exatamente como a sua API Python espera receber
+    const dadosParaEnviar = { 
+        solicitante: solicitante, 
+        almoxarife: almoxarife, 
+        data: data, 
+        obs: obs,            // Python espera 'obs'
+        devolucao: devolucao // Python espera 'devolucao'
+    };
 
     fetch('/api/registrarsaida', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ solicitante, almoxarife, data, obs, devolucao, itens })
+        body:    JSON.stringify({ 
+            solicitante: solicitante, 
+            almoxarife: almoxarife, 
+            data: data, 
+            obs: obs, 
+            devolucao: devolucao, 
+            itens: itens 
+        })
     })
     .then(r => r.json())
     .then(resp => {
         if (resp.ok) {
-            Swal.fire({ icon: 'success', title: 'Saída registrada!' }).then(() => {
+            Swal.fire({ icon: 'success', title: 'Saída registrada com sucesso!' }).then(() => {
                 tbody.innerHTML = '';
+                // Opcional: Se usou o sessionStorage para salvar os campos, limpa aqui:
+                sessionStorage.clear(); 
+                window.location.reload(); // Recarrega para limpar os campos da tela
             });
         } else {
-            Swal.fire({ icon: 'error', title: 'Erro ao registrar!' });
+            // Mostra o erro exato que o Python devolveu (ajuda muito a descobrir se falta coluna no banco)
+            Swal.fire({ icon: 'error', title: 'Erro ao registrar!', text: resp.erro || '' });
         }
     })
-    .catch(() => Swal.fire({ icon: 'error', title: 'Erro de conexão!' }));
+    .catch(err => {
+        console.error(err);
+        Swal.fire({ icon: 'error', title: 'Erro de conexão com o servidor!' });
+    });
 }

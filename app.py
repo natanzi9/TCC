@@ -1,4 +1,5 @@
 import os
+import bcrypt
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import mysql.connector
 
@@ -26,11 +27,13 @@ def login():
 def home():
     conexao = banco()
     cursor = conexao.cursor(dictionary=True)
-    cursor.execute("SELECT nome, quantidade, imagem FROM estoque ORDER BY id DESC LIMIT 5")
+    cursor.execute("SELECT nome, quantidade, imagem FROM estoque ORDER BY id DESC")
     ultimos = cursor.fetchall()
+    cursor.execute("SELECT item, qtde, data, solicitante, almoxarife, descricao FROM saidas ORDER BY id DESC")
+    saidas = cursor.fetchall()
     cursor.close()
     conexao.close()
-    return render_template("home.html", ultimos=ultimos)
+    return render_template("home.html", ultimos=ultimos, saidas=saidas)
 
 
 @app.route('/adicionaritens')
@@ -68,7 +71,7 @@ def apilogin():
 
     # Se marcou ADM: só entra com administrador/senai2026
     if tipo == 'adm':
-        if username.lower() == 'administrador' and senha == 'senai2026':
+        if username.lower() == 'admin' and senha == '123':
             session['usuario'] = username
             session['tipo']    = 'adm'
             return redirect(url_for('home'))
@@ -82,41 +85,39 @@ def apilogin():
 
     # Se marcou USER: não pode entrar como administrador
     if tipo == 'user':
-        if username.lower() == 'administrador':
+        if username.lower() == 'admin':
             return """
-            <script>
-                alert("Use o tipo ADM para entrar como administrador");
-                window.location.href = "/";
-            </script>
-            """
-        conexao = banco()
-        cursor  = conexao.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT * FROM usuario WHERE usuario = %s AND senha = %s",
-            (username, senha)
-        )
-        usuario = cursor.fetchone()
-        cursor.close()
-        conexao.close()
+        <script>
+            alert("Use o tipo ADM para entrar como administrador");
+            window.location.href = "/";
+        </script>
+        """
+    conexao = banco()
+    cursor  = conexao.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT * FROM usuario WHERE usuario = %s",
+        (username,)
+    )
+    usuario = cursor.fetchone()
+    cursor.close()
+    conexao.close()
 
-        if usuario:
-            session['usuario'] = username
-            session['tipo']    = 'user'
-            return redirect(url_for('home'))
-
-    return """
-    <script>
-        alert("Usuário ou senha incorretos");
-        window.location.href = "/";
-    </script>
-    """
-
-
+    if usuario and bcrypt.checkpw(senha.encode('utf-8'), usuario['senha'].encode('utf-8')):
+        session['usuario'] = username
+        session['tipo']    = 'user'
+        return redirect(url_for('home'))
+    else:
+        return """
+        <script>
+            alert("Usuário ou senha incorretos");
+            window.location.href = "/";
+        </script>
+        """
 # ========== CRIAR CONTA ==========
 @app.route('/api/criarconta', methods=['POST'])
 def api_criarconta():
-    username = request.form['username']
-    senha = request.form['senha']
+    username  = request.form['username']
+    senha     = request.form['senha']
     confirmar = request.form['confirmar']
 
     if senha != confirmar:
@@ -128,7 +129,7 @@ def api_criarconta():
         """
 
     conexao = banco()
-    cursor = conexao.cursor(dictionary=True)
+    cursor  = conexao.cursor(dictionary=True)
     cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (username,))
     existente = cursor.fetchone()
 
@@ -142,10 +143,13 @@ def api_criarconta():
         </script>
         """
 
+    # Gera o hash da senha
+    hash_senha = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
     cursor2 = conexao.cursor()
     cursor2.execute(
         "INSERT INTO usuario (usuario, senha) VALUES (%s, %s)",
-        (username, senha)
+        (username, hash_senha)
     )
     conexao.commit()
     cursor2.close()
@@ -210,34 +214,46 @@ def api_item(id):
 # ========== REGISTRAR SAÍDA ==========
 @app.route('/api/registrarsaida', methods=['POST'])
 def api_registrarsaida():
-    dados   = request.get_json()
-    itens   = dados.get('itens', [])
-    obs     = dados.get('obs')
+    dados     = request.get_json()
+    itens     = dados.get('itens', [])
+    obs       = dados.get('obs')
     devolucao = dados.get('devolucao')
 
     conexao = banco()
-    cursor = conexao.cursor()
+    cursor  = conexao.cursor()
 
-    for item in itens:
-        cursor.execute(
-            """INSERT INTO saidas (item, qtde, descricao, categoria, solicitante, almoxarife, data, devolucao)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-            (
-                item['nome'],
-                item['qtde'],
-                obs,
-                devolucao,
-                dados.get('solicitante'),
-                dados.get('almoxarife'),
-                dados.get('data') or None,
-                devolucao
+    try:
+        for item in itens:
+            cursor.execute(
+                """INSERT INTO saidas (item, qtde, descricao, categoria, solicitante, almoxarife, data, devolucao)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                (
+                    item['nome'],
+                    item['qtde'],
+                    obs,
+                    devolucao,
+                    dados.get('solicitante'),
+                    dados.get('almoxarife'),
+                    dados.get('data') or None,
+                    devolucao
+                )
             )
-        )
-        cursor.execute(
+            cursor.execute(
                 "UPDATE estoque SET quantidade = quantidade - %s WHERE id = %s",
                 (item['qtde'], item['id'])
             )
-    return jsonify({'ok': True})
+            cursor.execute("SELECT nome, quantidade, imagem FROM estoque ORDER BY id DESC")
+        conexao.commit()  # ← estava faltando isso
+        return jsonify({'ok': True})
+
+    except Exception as e:
+        conexao.rollback()
+        print("ERRO:", e)
+        return jsonify({'ok': False, 'erro': str(e)}), 500
+
+    finally:
+        cursor.close()
+        conexao.close()
 
 @app.route('/api/item_completo/<int:id>')
 def api_item_completo(id):

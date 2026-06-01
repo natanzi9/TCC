@@ -53,6 +53,10 @@ h1 {
     margin: 50px auto;
     padding: 30px;
     text-align: center;
+    overflow-y: auto;
+    max-height: 500px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
 }
 
 table {

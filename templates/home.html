@@ -46,33 +46,68 @@
     <div class="quadrado">
         <h1 class="resumo-estoque">RESUMO DO ESTOQUE</h1>
         <div class="tabela_home">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ITEM</th>
-                        <th>QTDE</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in ultimos %}
-                    <tr>
-                        <td>{{ item.nome }}</td>
-                        <td>{{ item.quantidade }}</td>
-                        <td>
-                            {% if item.imagem %}
-                            <button class="btn-foto"
-                                onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' })">
-                                <img src="{{ url_for('static', filename='icone de imagem.png') }}">
-                            </button>
-                            {% else %}
-                            <span style="color: gray; font-size: 12px;">sem foto</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="tabelas_container">
+                <div class="tabela_home">
+                    <h3 style="color:#135E9F; margin-bottom:10px;">ÚLTIMOS ITENS CADASTRADOS</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ITEM</th>
+                                <th>QTDE</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in ultimos %}
+                            <tr>
+                                <td>{{ item.nome }}</td>
+                                <td>{{ item.quantidade }}</td>
+                                <td>
+                                    {% if item.imagem %}
+                                    <button class="btn-foto"
+                                        onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' })">
+                                        <img src="{{ url_for('static', filename='icone de imagem.png') }}">
+                                    </button>
+                                    {% else %}
+                                    <span style="color:gray;font-size:12px;">sem foto</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="tabela_home">
+                    <h3 style="color:#135E9F; margin-bottom:10px;">HISTÓRICO DE SAÍDAS</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ITEM</th>
+                                <th>QTDE</th>
+                                <th>DATA</th>
+                                <th>SOLICITANTE</th>
+                                <th>ALMOXARIFE</th>
+                                <th>FINALIDADE</th>
+                                <th>DEVOLUÇÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for saida in saidas %}
+                            <tr>
+                                <td>{{ saida.item }}</td>
+                                <td>{{ saida.qtde }}</td>
+                                <td>{{ saida.data or '-' }}</td>
+                                <td>{{ saida.solicitante or '-' }}</td>
+                                <td>{{ saida.almoxarife or '-' }}</td>
+                                <td>{{ saida.descricao or '-' }}</td>
+                                <td>{{ saida.devolucao or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </body>
