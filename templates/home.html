@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOME</title>
     <link rel="shortcut icon" type="image/png" href="static/fiep.jpg">
-     <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
-     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='main.js') }}" defer></script>
 </head>
 
@@ -17,11 +17,11 @@
         <img src="static/images.png">
         <div class="navbar">
 
-            
+
             <button id="home"> HOME </button>
 
             <a href="/adicionaritens">
-            <button> ADICIONAR ITENS</button>
+                <button> ADICIONAR ITENS</button>
             </a>
 
             <a href="/estoque">
@@ -44,41 +44,37 @@
         <h1 class="sistema-titulo">SISTEMA DE ALMOXARIFADO</h1>
     </div>
     <div class="quadrado">
-        <br><br><br><br><br><br><br>
         <h1 class="resumo-estoque">RESUMO DO ESTOQUE</h1>
-        <h2 class="itens-cadastrados-esq">ITENS CADASTRADOS</h2>
-        <h2 class="itens-cadastrados-dir">ITENS RETIRADOS</h2>
-        <h1 class="contador-dir">0</h1>
-        <h1 class="contador-esq">0</h1>
-        <h1 class="ultimos-itens">ÚLTIMOS ITENS CADASTRADOS</h1>
-
-<div class="tabela_home">
-    <table>
-        <thead>
-            <tr>
-                <th>ITEM</th>
-                <th>QTDE</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in ultimos %}
-            <tr>
-                <td>{{ item.nome }}</td>
-                <td>{{ item.quantidade }}</td>
-                <td>
-                    {% if item.imagem %}
-                        <button class="btn-foto" onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' })">
-                            <img src="{{ url_for('static', filename='icone de imagem.png') }}">
-                        </button>
-                    {% else %}
-                    <span style="color: gray; font-size: 12px;">sem foto</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+        <div class="tabela_home">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ITEM</th>
+                        <th>QTDE</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ultimos %}
+                    <tr>
+                        <td>{{ item.nome }}</td>
+                        <td>{{ item.quantidade }}</td>
+                        <td>
+                            {% if item.imagem %}
+                            <button class="btn-foto"
+                                onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' })">
+                                <img src="{{ url_for('static', filename='icone de imagem.png') }}">
+                            </button>
+                            {% else %}
+                            <span style="color: gray; font-size: 12px;">sem foto</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
+
 </html>

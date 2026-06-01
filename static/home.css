@@ -16,12 +16,13 @@ img {
 
 .navbar {
     background-color: white;
-    width: 1500px;
+    width: 1510px;
     height: 75px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 2px;
+    box-sizing: border-box;
 }
 
 .navbar a {
@@ -29,7 +30,6 @@ img {
 }
 
 .navbar button {
-    top: 47px;
     width: 230px;
     height: 50px;
     margin-left: 80px;
@@ -41,102 +41,46 @@ img {
     cursor: pointer;
 }
 
-.quadrado {
-    width: 1750px;
-    height: 420px;
-    background-color: white;
-    margin-top: 430px;
-    margin-left: 80px;
-    border-radius: 20px;
-}
-
 .header {
-    position: absolute;
-    left: 35px;
-    top: 40px;
+    text-align: center;
+    padding: 20px 0 10px 0;
 }
 
 .bem-vindo {
-    position: absolute;
-    left: -3px;
-    top: 100px;
     color: white;
-    white-space: nowrap;
+    font-size: 22px;
+    text-align: left;
+    margin: 10px 0 0 40px;
 }
 
 .sistema-titulo {
-    position: absolute;
-    left: 340px;
-    top: 210px;
     color: white;
-    font-size: 85px;
-    white-space: nowrap;
+    font-size: 60px;
+    text-align: center;
+    margin: 10px;
+    margin-top: 80px;
+}
+
+.quadrado {
+    width: 90%;
+    min-height: 350px;
+    background-color: white;
+    margin: 30px auto;
+    border-radius: 20px;
+    padding: 30px;
+    box-sizing: border-box;
+    margin-top: 150px;
 }
 
 .resumo-estoque {
-    position: absolute;
-    left: 100px;
-    top: 550px;
     color: #135E9F;
-}
-
-.itens-cadastrados-esq {
-    position: absolute;
-    left: 330px;
-    top: 830px;
-    color: #808080;
-}
-
-.itens-cadastrados-dir {
-    position: absolute;
-    left: 930px;
-    top: 830px;
-    color: #808080;
-}
-
-.contador-dir {
-    position: absolute;
-    left: 1030px;
-    top: 700px;
-    font-size: 85px;
-    color: black;
-}
-
-.contador-esq {
-    position: absolute;
-    left: 430px;
-    top: 700px;
-    font-size: 85px;
-    color: black;
-}
-
-.ultimos-itens {
-    position: absolute;
-    left: 1300px;
-    top: 560px;
-    font-size: 30px;
-    color: #135E9F;
-}
-
-.unid {
-    position: absolute;
-    left: 1700px;
-    top: 650px;
-    color: #808080;
-}
-
-.separador {
-    position: absolute;
-    left: 1300px;
-    top: 650px;
-    color: #808080;
+    font-size: 20px;
+    margin-bottom: 20px;
 }
 
 .tabela_home {
-    position: absolute;
-    left: 1280px;
-    top: 620px;
-    width: 420px;
+    width: 700px;
+    margin: 0 auto;
 }
 
 .tabela_home table {
@@ -161,12 +105,6 @@ img {
     color: #333;
 }
 
-.tabela_home {
-    position: absolute;
-    left: 1320px;
-    top: 620px;
-    width: 420px;
-}
 .btn-foto {
     background-color: #F28B0C;
     border: none;
@@ -176,6 +114,6 @@ img {
 }
 
 .btn-foto img {
-    width: 22px !important;   /* ← força o tamanho, ignora o img global */
+    width: 22px !important;
     height: 22px !important;
 }

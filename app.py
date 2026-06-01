@@ -233,6 +233,10 @@ def api_registrarsaida():
                 devolucao
             )
         )
+        cursor.execute(
+                "UPDATE estoque SET quantidade = quantidade - %s WHERE id = %s",
+                (item['qtde'], item['id'])
+            )
     return jsonify({'ok': True})
 
 @app.route('/api/item_completo/<int:id>')

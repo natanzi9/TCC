@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const inputSenha = document.getElementById('senha');
 
    function verificar() {
-    const loginCorreto = inputLogin.value.toLowerCase() === 'administrador';
+    const loginCorreto = inputLogin.value.toLowerCase() === 'admin';
     const senhaCorreta = inputSenha.value === 'senai2026';
     const isAdm        = checkAdm.checked;
     const isUser       = checkUser.checked;
