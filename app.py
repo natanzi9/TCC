@@ -231,17 +231,19 @@ def api_item(id):
 # ===== REGISTRAR SAÍDA =====
 @app.route('/api/registrarsaida', methods=['POST'])
 def api_registrarsaida():
-    dados     = request.get_json()
-    itens     = dados.get('itens', [])
-    obs       = dados.get('obs')        # finalidade/observação
-    devolucao = dados.get('devolucao')  # 'Sim' ou 'Não'
+    dados = request.get_json()
+    itens = dados.get('itens', [])
+    obs   = dados.get('obs')  # finalidade/observação
 
     conexao = banco()
     cursor  = conexao.cursor()
 
     try:
         for item in itens:
-            # Insere a saída no banco
+            # Pegamos o 'devolucao' de dentro do dicionário do ITEM específico
+            devolucao_item = item.get('devolucao', 'Não')
+
+            # Insere a saída no banco com o status de devolução próprio deste item
             cursor.execute(
                 """INSERT INTO saidas (item, qtde, descricao, categoria, solicitante, almoxarife, data, devolucao)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
@@ -253,7 +255,7 @@ def api_registrarsaida():
                     dados.get('solicitante'),
                     dados.get('almoxarife'),
                     dados.get('data') or None,
-                    devolucao
+                    devolucao_item  # Usando o valor individual do item aqui!
                 )
             )
             # Diminui a quantidade no estoque
@@ -367,4 +369,4 @@ def api_devolucao():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0',port=80)

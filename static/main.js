@@ -145,15 +145,20 @@ function abrirAlterar() {
 }
 
 // ===== ADICIONAR ITEM NA TABELA DE SAÍDAS =====
+// ===== ADICIONAR ITEM NA TABELA DE SAÍDAS =====
 function adicionarNaTabela() {
     const id_item = document.getElementById('id_item').value.trim();
     const qtde = document.getElementById('qtde').value.trim();
 
-    // Valida se os campos foram preenchidos
+    // Valida se os campos de item e quantidade foram preenchidos
     if (!id_item || !qtde) {
         Swal.fire({ icon: 'warning', title: 'Preencha o ID e a QTDE!' });
         return;
     }
+
+    // Pega qual checkbox de devolução está marcado no momento
+    const checkboxSim = document.getElementById('sim');
+    const exigeDevolucao = (checkboxSim && checkboxSim.checked) ? 'Sim' : 'Não';
 
     // Busca o nome do item pelo ID no servidor
     fetch(`/api/item/${id_item}`)
@@ -169,28 +174,42 @@ function adicionarNaTabela() {
             const idx = tbody.rows.length;
             const tr = document.createElement('tr');
             tr.id = `linha-${idx}`;
+            
+            // Injetamos o "Sim" ou "Não" na quarta coluna (td)
             tr.innerHTML = `
                 <td>${id_item}</td>
                 <td>${data.nome}</td>
                 <td>${qtde}</td>
+                <td><strong>${exigeDevolucao}</strong></td>
                 <td class="col-remover">
                     <button class="btn-remover" onclick="removerLinha('linha-${idx}')">✕</button>
                 </td>
             `;
             tbody.appendChild(tr);
 
-            // Limpa os campos após adicionar
+            // Limpa apenas os campos de adicionar itens após o sucesso
             document.getElementById('id_item').value = '';
             document.getElementById('qtde').value = '';
         })
         .catch(() => Swal.fire({ icon: 'error', title: 'Erro ao buscar item!' }));
 }
 
-// ===== REMOVER LINHA DA TABELA DE SAÍDAS =====
-function removerLinha(id) {
-    const tr = document.getElementById(id);
-    if (tr) tr.remove();
-}
+// ===== LÓGICA DOS CHECKBOXES DE DEVOLUÇÃO (Roda ao carregar a página) =====
+document.addEventListener('DOMContentLoaded', function () {
+    const sim = document.getElementById('sim');
+    const nao = document.getElementById('nao');
+
+    // Se esses checkboxes existirem na página atual (tela de saídas)
+    if (sim && nao) {
+        sim.addEventListener('change', function () {
+            if (this.checked) nao.checked = false;
+        });
+
+        nao.addEventListener('change', function () {
+            if (this.checked) sim.checked = false;
+        });
+    }
+});
 
 // ===== REGISTRAR SAÍDA =====
 function registrarSaida() {
@@ -210,11 +229,13 @@ function registrarSaida() {
         itens.push({
             id: cells[0].textContent.trim(),
             nome: cells[1].textContent.trim(),
-            qtde: cells[2].textContent.trim()
+            qtde: cells[2].textContent.trim(),
+            // NOVIDADE: Pega o "Sim" ou "Não" que está escrito NESTA linha específica da tabela
+            devolucao: cells[3].textContent.trim() 
         });
     });
 
-    // Pega os valores dos campos do formulário
+    // Pega os outros valores dos campos do formulário
     const solicitante = document.getElementById('solicitante') ? document.getElementById('solicitante').value.trim() : '';
     const almoxarife = document.getElementById('almoxarife') ? document.getElementById('almoxarife').value.trim() : '';
     const campoData = document.getElementById('data') || document.getElementById('data_retirada');
@@ -222,20 +243,15 @@ function registrarSaida() {
     const campoObs = document.getElementById('obs') || document.getElementById('finalidade');
     const obs = campoObs ? campoObs.value.trim() : '';
 
-    // Verifica se o checkbox de devolução está marcado
-    const checkboxSim = document.getElementById('sim');
-    const devolucao = (checkboxSim && checkboxSim.checked) ? 'Sim' : 'Não';
-
     // Envia todos os dados para o servidor registrar a saída
     fetch('/api/registrarsaida', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solicitante, almoxarife, data, obs, devolucao, itens })
+        body: JSON.stringify({ solicitante, almoxarife, data, obs, itens }) // Removemos o 'devolucao' global daqui
     })
     .then(r => r.json())
     .then(resp => {
         if (resp.ok) {
-            // Deu certo: mostra sucesso, limpa a tabela e recarrega a página
             Swal.fire({ icon: 'success', title: 'Saída registrada com sucesso!' }).then(() => {
                 tbody.innerHTML = '';
                 sessionStorage.clear();

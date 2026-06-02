@@ -1,5 +1,5 @@
 import bcrypt
 
-senha = b"senai2026"  
+senha = b"123"  
 hash = bcrypt.hashpw(senha, bcrypt.gensalt()).decode()
 print(hash)
