@@ -1,19 +1,25 @@
+// ===== DESTACA O BOTÃO DA PÁGINA ATUAL NA NAVBAR =====
 function colorir() {
+    // Borda azul no botão HOME quando está na página home
     document.getElementById("home").style.border = "2px solid #045cac";
 }
 
 function coloriraditens() {
+    // Borda azul no botão ADICIONAR ITENS quando está nessa página
     document.getElementById("itens").style.border = "2px solid #045cac";
 }
 
 function colorirestoque() {
+    // Borda azul no botão ESTOQUE quando está nessa página
     document.getElementById("estoque").style.border = "2px solid #045cac";
 }
 
 function saida() {
+    // Borda azul no botão REGISTRAR SAÍDAS quando está nessa página
     document.getElementById("saida").style.border = "2px solid #045cac";
 }
 
+// ===== ALERTA DE CONTA CRIADA COM SUCESSO =====
 function a() {
     Swal.fire({
         title: "CONTA CRIADA COM SUCESSO",
@@ -22,39 +28,42 @@ function a() {
     });
 }
 
+// ===== LÓGICA DA TELA DE LOGIN =====
 document.addEventListener('DOMContentLoaded', function () {
-    const checkUser  = document.getElementById('checkUser');
-    const checkAdm   = document.getElementById('checkAdm');
-    const linkCriar  = document.getElementById('linkCriar');
+    // Pega os elementos da tela de login
+    const checkUser = document.getElementById('checkUser');
+    const checkAdm = document.getElementById('checkAdm');
+    const linkCriar = document.getElementById('linkCriar');
     const inputLogin = document.getElementById('login');
     const inputSenha = document.getElementById('senha');
 
-   function verificar() {
-    const loginCorreto = inputLogin.value.toLowerCase() === 'admin';
-    const senhaCorreta = inputSenha.value === '123';
-    const isAdm        = checkAdm.checked;
-    const isUser       = checkUser.checked;
+    // Se algum desses elementos não existir (ex: não está na tela de login), para aqui
+    if (!checkUser || !checkAdm || !linkCriar || !inputLogin || !inputSenha) return;
 
-    // adm: precisa marcar ADM + login e senha corretos
-    // user: precisa marcar USER + login NÃO pode ser administrador
-    const podeEntrar =
-        (isAdm && loginCorreto && senhaCorreta) ||
-        (isUser && !loginCorreto);
+    function verificar() {
+        // Verifica se o login e senha digitados são do administrador
+        const loginCorreto = inputLogin.value.toLowerCase() === 'admin';
+        const senhaCorreta = inputSenha.value === '123';
+        const isAdm = checkAdm.checked;
+        const isUser = checkUser.checked;
 
-    // libera o link de criar conta só se for adm com credenciais certas
-    const podeCriar = isAdm && loginCorreto && senhaCorreta;
+        // O link de criar conta só fica disponível se for ADM com credenciais certas
+        const podeCriar = isAdm && loginCorreto && senhaCorreta;
 
-    if (podeCriar) {
-        linkCriar.style.pointerEvents = 'auto';
-        linkCriar.style.opacity       = '1';
-        linkCriar.style.cursor        = 'pointer';
-    } else {
-        linkCriar.style.pointerEvents = 'none';
-        linkCriar.style.opacity       = '0.4';
-        linkCriar.style.cursor        = 'not-allowed';
+        if (podeCriar) {
+            // Libera o link de criar conta
+            linkCriar.style.pointerEvents = 'auto';
+            linkCriar.style.opacity = '1';
+            linkCriar.style.cursor = 'pointer';
+        } else {
+            // Bloqueia o link de criar conta
+            linkCriar.style.pointerEvents = 'none';
+            linkCriar.style.opacity = '0.4';
+            linkCriar.style.cursor = 'not-allowed';
+        }
     }
-}
 
+    // Garante que só um checkbox fica marcado por vez (ADM ou USER, não os dois)
     checkUser.addEventListener('change', function () {
         if (this.checked) checkAdm.checked = false;
         verificar();
@@ -65,16 +74,21 @@ document.addEventListener('DOMContentLoaded', function () {
         verificar();
     });
 
+    // Verifica sempre que o usuário digita login ou senha
     inputLogin.addEventListener('input', verificar);
     inputSenha.addEventListener('input', verificar);
 
+    // Roda uma vez ao carregar para definir o estado inicial
     verificar();
 });
 
+// ===== PREVIEW DA IMAGEM AO ADICIONAR ITEM =====
 function mostrarPreview(input) {
+    // Mostra o nome do arquivo selecionado
     const nome = input.files[0] ? input.files[0].name : '';
     document.getElementById('nomeArquivo').textContent = nome ? '📎 ' + nome : '';
 
+    // Mostra a prévia da imagem selecionada
     if (input.files[0]) {
         const reader = new FileReader();
         reader.onload = e => {
@@ -86,7 +100,9 @@ function mostrarPreview(input) {
     }
 }
 
+// ===== ALTERAR ITEM DO ESTOQUE =====
 function abrirAlterar() {
+    // Abre um popup pedindo o ID do item que quer alterar
     Swal.fire({
         title: 'Digite o ID do item',
         input: 'number',
@@ -100,6 +116,7 @@ function abrirAlterar() {
 
         const id = result.value;
 
+        // Busca os dados do item no servidor pelo ID
         fetch(`/api/item_completo/${id}`)
             .then(r => r.json())
             .then(data => {
@@ -108,16 +125,18 @@ function abrirAlterar() {
                     return;
                 }
 
-                document.getElementById('campo_nome').value          = data.nome;
-                document.getElementById('campo_categoria').value     = data.categoria;
-                document.getElementById('campo_descricao').value     = data.descricao;
-                document.getElementById('campo_preco').value         = data.preco;
-                document.getElementById('campo_quantidade').value    = data.quantidade;
+                // Preenche o formulário com os dados do item encontrado
+                document.getElementById('campo_nome').value = data.nome;
+                document.getElementById('campo_categoria').value = data.categoria;
+                document.getElementById('campo_descricao').value = data.descricao;
+                document.getElementById('campo_preco').value = data.preco;
+                document.getElementById('campo_quantidade').value = data.quantidade;
                 document.getElementById('campo_estoqueminimo').value = data.estoque_min;
 
-                document.getElementById('tituloPagina').textContent  = 'ALTERAR ITEM';
-                document.getElementById('formItem').action           = `/api/alteraritem/${id}`;
-                document.getElementById('btnAdicionar').innerHTML    = '<strong>SALVAR</strong>';
+                // Muda o título e o botão para indicar que está alterando
+                document.getElementById('tituloPagina').textContent = 'ALTERAR ITEM';
+                document.getElementById('formItem').action = `/api/alteraritem/${id}`;
+                document.getElementById('btnAdicionar').innerHTML = '<strong>SALVAR</strong>';
 
                 Swal.fire({ icon: 'success', title: `Item "${data.nome}" carregado!`, timer: 1500, showConfirmButton: false });
             })
@@ -125,15 +144,18 @@ function abrirAlterar() {
     });
 }
 
+// ===== ADICIONAR ITEM NA TABELA DE SAÍDAS =====
 function adicionarNaTabela() {
     const id_item = document.getElementById('id_item').value.trim();
-    const qtde    = document.getElementById('qtde').value.trim();
+    const qtde = document.getElementById('qtde').value.trim();
 
+    // Valida se os campos foram preenchidos
     if (!id_item || !qtde) {
         Swal.fire({ icon: 'warning', title: 'Preencha o ID e a QTDE!' });
         return;
     }
 
+    // Busca o nome do item pelo ID no servidor
     fetch(`/api/item/${id_item}`)
         .then(r => r.json())
         .then(data => {
@@ -142,10 +164,11 @@ function adicionarNaTabela() {
                 return;
             }
 
+            // Adiciona uma nova linha na tabela de itens da saída
             const tbody = document.getElementById('corpoTabela');
-            const idx   = tbody.rows.length;
-            const tr    = document.createElement('tr');
-            tr.id       = `linha-${idx}`;
+            const idx = tbody.rows.length;
+            const tr = document.createElement('tr');
+            tr.id = `linha-${idx}`;
             tr.innerHTML = `
                 <td>${id_item}</td>
                 <td>${data.nome}</td>
@@ -156,85 +179,69 @@ function adicionarNaTabela() {
             `;
             tbody.appendChild(tr);
 
+            // Limpa os campos após adicionar
             document.getElementById('id_item').value = '';
-            document.getElementById('qtde').value    = '';
+            document.getElementById('qtde').value = '';
         })
         .catch(() => Swal.fire({ icon: 'error', title: 'Erro ao buscar item!' }));
 }
 
+// ===== REMOVER LINHA DA TABELA DE SAÍDAS =====
 function removerLinha(id) {
     const tr = document.getElementById(id);
     if (tr) tr.remove();
 }
 
+// ===== REGISTRAR SAÍDA =====
 function registrarSaida() {
-    const tbody  = document.getElementById('corpoTabela');
+    const tbody = document.getElementById('corpoTabela');
     const linhas = tbody.querySelectorAll('tr');
 
+    // Verifica se tem pelo menos um item na tabela
     if (linhas.length === 0) {
         Swal.fire({ icon: 'warning', title: 'Adicione pelo menos um item!' });
         return;
     }
 
+    // Monta a lista de itens a partir das linhas da tabela
     const itens = [];
     linhas.forEach(tr => {
         const cells = tr.querySelectorAll('td');
         itens.push({
-            id:   cells[0].textContent.trim(),
+            id: cells[0].textContent.trim(),
             nome: cells[1].textContent.trim(),
             qtde: cells[2].textContent.trim()
         });
     });
 
-    // --- CORREÇÃO DOS CAMPOS CONFORME O SEU PRINT ---
+    // Pega os valores dos campos do formulário
     const solicitante = document.getElementById('solicitante') ? document.getElementById('solicitante').value.trim() : '';
-    const almoxarife  = document.getElementById('almoxarife') ? document.getElementById('almoxarife').value.trim() : '';
-    
-    // ATENÇÃO: Verifique se o ID no HTML da data é 'data' ou 'data_retirada'
+    const almoxarife = document.getElementById('almoxarife') ? document.getElementById('almoxarife').value.trim() : '';
     const campoData = document.getElementById('data') || document.getElementById('data_retirada');
     const data = campoData ? campoData.value : null;
-    
-    // ATENÇÃO: No print está "Finalidade". Verifique se o ID no seu HTML é 'obs' ou 'finalidade'
     const campoObs = document.getElementById('obs') || document.getElementById('finalidade');
     const obs = campoObs ? campoObs.value.trim() : '';
 
-    // --- CORREÇÃO DO SIM / NÃO ---
-    // Procura pelo ID 'sim'. Se não achar, tenta achar pelo name ou assume 'Não'
+    // Verifica se o checkbox de devolução está marcado
     const checkboxSim = document.getElementById('sim');
     const devolucao = (checkboxSim && checkboxSim.checked) ? 'Sim' : 'Não';
 
-    // Monta o objeto exatamente como a sua API Python espera receber
-    const dadosParaEnviar = { 
-        solicitante: solicitante, 
-        almoxarife: almoxarife, 
-        data: data, 
-        obs: obs,            // Python espera 'obs'
-        devolucao: devolucao // Python espera 'devolucao'
-    };
-
+    // Envia todos os dados para o servidor registrar a saída
     fetch('/api/registrarsaida', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ 
-            solicitante: solicitante, 
-            almoxarife: almoxarife, 
-            data: data, 
-            obs: obs, 
-            devolucao: devolucao, 
-            itens: itens 
-        })
+        body: JSON.stringify({ solicitante, almoxarife, data, obs, devolucao, itens })
     })
     .then(r => r.json())
     .then(resp => {
         if (resp.ok) {
+            // Deu certo: mostra sucesso, limpa a tabela e recarrega a página
             Swal.fire({ icon: 'success', title: 'Saída registrada com sucesso!' }).then(() => {
                 tbody.innerHTML = '';
-                // Opcional: Se usou o sessionStorage para salvar os campos, limpa aqui:
-                sessionStorage.clear(); 
-                window.location.reload(); // Recarrega para limpar os campos da tela
+                sessionStorage.clear();
+                window.location.reload();
             });
         } else {
-            // Mostra o erro exato que o Python devolveu (ajuda muito a descobrir se falta coluna no banco)
             Swal.fire({ icon: 'error', title: 'Erro ao registrar!', text: resp.erro || '' });
         }
     })
@@ -242,4 +249,57 @@ function registrarSaida() {
         console.error(err);
         Swal.fire({ icon: 'error', title: 'Erro de conexão com o servidor!' });
     });
+}
+
+// ===== MARCAR DEVOLUÇÃO NO HISTÓRICO =====
+function marcarDevolucao(btn, tipo) {
+    const td = btn.parentElement;        // célula onde estão os botões
+    const tr = td.parentElement;         // linha da tabela
+    const saida_id = tr.dataset.id;      // ID da saída salvo no data-id da linha
+    const cells = tr.querySelectorAll('td');
+    const nomeItem = cells[0].textContent.trim();   // nome do item
+    const qtdeSaida = parseInt(cells[1].textContent.trim()); // quantidade que saiu
+
+    if (tipo === 'parcial') {
+        // Abre popup perguntando quantos foram devolvidos
+        Swal.fire({
+            title: 'Quantos foram devolvidos?',
+            input: 'number',
+            inputPlaceholder: 'Ex: 1',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Confirmar',
+            confirmButtonColor: '#045cac'
+        }).then(result => {
+            if (result.isConfirmed && result.value) {
+                const qtdeDevolvida = parseInt(result.value);
+
+                // Envia a devolução parcial para o servidor
+                fetch('/api/devolucao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: nomeItem, qtde: qtdeDevolvida, status: 'parcial', saida_id: saida_id })
+                }).then(r => r.json()).then(resp => {
+                    if (resp.ok) {
+                        // Atualiza a quantidade na tela e muda o texto da célula
+                        cells[1].textContent = qtdeSaida - qtdeDevolvida;
+                        td.innerHTML = '<span style="color:#F28B0C; font-weight:bold;">Parcial (' + qtdeDevolvida + ')</span>';
+                    }
+                });
+            }
+        });
+    } else {
+        // Devolução total: devolve tudo de uma vez
+        fetch('/api/devolucao', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome: nomeItem, qtde: qtdeSaida, status: 'total', saida_id: saida_id })
+        }).then(r => r.json()).then(resp => {
+            if (resp.ok) {
+                // Zera a quantidade na tela e muda o texto da célula
+                cells[1].textContent = 0;
+                td.innerHTML = '<span style="color:#045cac; font-weight:bold;">Total</span>';
+            }
+        });
+    }
 }

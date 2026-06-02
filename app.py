@@ -4,11 +4,12 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import mysql.connector
 
 app = Flask(__name__)
-app.secret_key = "senha_super_secreta"
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-os.makedirs('static/uploads', exist_ok=True)
+app.secret_key = "senha_super_secreta"  # Chave para criptografar a sessão do usuário
+app.config['UPLOAD_FOLDER'] = 'static/uploads'  # Pasta onde as imagens são salvas
+os.makedirs('static/uploads', exist_ok=True)  # Cria a pasta se não existir
 
 
+# ===== CONEXÃO COM O BANCO DE DADOS =====
 def banco():
     return mysql.connector.connect(
         host="localhost",
@@ -18,8 +19,11 @@ def banco():
     )
 
 
+# ===== PÁGINAS =====
+
 @app.route('/')
 def login():
+    # Página inicial de login
     return render_template("index.html")
 
 
@@ -27,10 +31,15 @@ def login():
 def home():
     conexao = banco()
     cursor = conexao.cursor(dictionary=True)
+
+    # Busca todos os itens do estoque, do mais recente para o mais antigo
     cursor.execute("SELECT nome, quantidade, imagem FROM estoque ORDER BY id DESC")
     ultimos = cursor.fetchall()
-    cursor.execute("SELECT item, qtde, data, solicitante, almoxarife, descricao FROM saidas ORDER BY id DESC")
+
+    # Busca todas as saídas registradas, incluindo status de devolução
+    cursor.execute("SELECT id, item, qtde, data, solicitante, almoxarife, descricao, devolucao, qtde_devolvida, status_devolucao FROM saidas ORDER BY id DESC")
     saidas = cursor.fetchall()
+
     cursor.close()
     conexao.close()
     return render_template("home.html", ultimos=ultimos, saidas=saidas)
@@ -45,6 +54,7 @@ def adicionaritens():
 def estoque():
     conexao = banco()
     cursor = conexao.cursor(dictionary=True)
+    # Busca todos os itens do estoque
     cursor.execute("SELECT * FROM estoque")
     itens = cursor.fetchall()
     cursor.close()
@@ -62,14 +72,14 @@ def criarconta():
     return render_template("criarconta.html")
 
 
-# ========== LOGIN ==========
+# ===== LOGIN =====
 @app.route('/api/login', methods=['POST'])
 def apilogin():
     username = request.form['username']
     senha    = request.form['senha']
     tipo     = request.form.get('tipo', '')
 
-    # Se marcou ADM: só entra com administrador/senai2026
+    # Login do administrador: verifica usuário e senha fixos
     if tipo == 'adm':
         if username.lower() == 'admin' and senha == '123':
             session['usuario'] = username
@@ -83,25 +93,25 @@ def apilogin():
             </script>
             """
 
-    # Se marcou USER: não pode entrar como administrador
+    # Login de usuário comum: não pode usar o login do administrador
     if tipo == 'user':
         if username.lower() == 'admin':
             return """
-        <script>
-            alert("Use o tipo ADM para entrar como administrador");
-            window.location.href = "/";
-        </script>
-        """
+            <script>
+                alert("Use o tipo ADM para entrar como administrador");
+                window.location.href = "/";
+            </script>
+            """
+
+    # Busca o usuário no banco pelo nome
     conexao = banco()
     cursor  = conexao.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT * FROM usuario WHERE usuario = %s",
-        (username,)
-    )
+    cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (username,))
     usuario = cursor.fetchone()
     cursor.close()
     conexao.close()
 
+    # Compara a senha digitada com o hash salvo no banco usando bcrypt
     if usuario and bcrypt.checkpw(senha.encode('utf-8'), usuario['senha'].encode('utf-8')):
         session['usuario'] = username
         session['tipo']    = 'user'
@@ -113,13 +123,16 @@ def apilogin():
             window.location.href = "/";
         </script>
         """
-# ========== CRIAR CONTA ==========
+
+
+# ===== CRIAR CONTA =====
 @app.route('/api/criarconta', methods=['POST'])
 def api_criarconta():
     username  = request.form['username']
     senha     = request.form['senha']
     confirmar = request.form['confirmar']
 
+    # Verifica se as senhas coincidem
     if senha != confirmar:
         return """
         <script>
@@ -130,6 +143,8 @@ def api_criarconta():
 
     conexao = banco()
     cursor  = conexao.cursor(dictionary=True)
+
+    # Verifica se o usuário já existe no banco
     cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (username,))
     existente = cursor.fetchone()
 
@@ -143,7 +158,7 @@ def api_criarconta():
         </script>
         """
 
-    # Gera o hash da senha
+    # Gera o hash da senha antes de salvar no banco (segurança)
     hash_senha = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     cursor2 = conexao.cursor()
@@ -164,22 +179,24 @@ def api_criarconta():
     """
 
 
-# ========== ADICIONAR ITEM COM IMAGEM ==========
+# ===== ADICIONAR ITEM COM IMAGEM =====
 @app.route('/api/adicionaritem', methods=['POST'])
 def adicionaritem():
-    nome         = request.form['nome']
-    categoria    = request.form['categoria']
-    descricao    = request.form['descricao']
-    preco        = request.form['preco']
-    quantidade   = request.form['quantidade']
+    nome          = request.form['nome']
+    categoria     = request.form['categoria']
+    descricao     = request.form['descricao']
+    preco         = request.form['preco']
+    quantidade    = request.form['quantidade']
     estoqueminimo = request.form['estoqueminimo']
 
+    # Salva a imagem na pasta de uploads se foi enviada
     imagem = request.files.get('imagem')
     caminho_imagem = None
     if imagem and imagem.filename != '':
         caminho_imagem = imagem.filename
         imagem.save(os.path.join(app.config['UPLOAD_FOLDER'], imagem.filename))
 
+    # Insere o item no banco de dados
     conexao = banco()
     cursor = conexao.cursor()
     cursor.execute(
@@ -199,7 +216,7 @@ def adicionaritem():
     """
 
 
-# ========== BUSCAR ITEM POR ID (saídas) ==========
+# ===== BUSCAR ITEM POR ID (usado na tela de saídas) =====
 @app.route('/api/item/<int:id>')
 def api_item(id):
     conexao = banco()
@@ -211,19 +228,20 @@ def api_item(id):
     return jsonify(item if item else {})
 
 
-# ========== REGISTRAR SAÍDA ==========
+# ===== REGISTRAR SAÍDA =====
 @app.route('/api/registrarsaida', methods=['POST'])
 def api_registrarsaida():
     dados     = request.get_json()
     itens     = dados.get('itens', [])
-    obs       = dados.get('obs')
-    devolucao = dados.get('devolucao')
+    obs       = dados.get('obs')        # finalidade/observação
+    devolucao = dados.get('devolucao')  # 'Sim' ou 'Não'
 
     conexao = banco()
     cursor  = conexao.cursor()
 
     try:
         for item in itens:
+            # Insere a saída no banco
             cursor.execute(
                 """INSERT INTO saidas (item, qtde, descricao, categoria, solicitante, almoxarife, data, devolucao)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
@@ -231,23 +249,23 @@ def api_registrarsaida():
                     item['nome'],
                     item['qtde'],
                     obs,
-                    devolucao,
+                    None,
                     dados.get('solicitante'),
                     dados.get('almoxarife'),
                     dados.get('data') or None,
                     devolucao
                 )
             )
+            # Diminui a quantidade no estoque
             cursor.execute(
                 "UPDATE estoque SET quantidade = quantidade - %s WHERE id = %s",
                 (item['qtde'], item['id'])
             )
-            cursor.execute("SELECT nome, quantidade, imagem FROM estoque ORDER BY id DESC")
-        conexao.commit()  # ← estava faltando isso
+        conexao.commit()
         return jsonify({'ok': True})
 
     except Exception as e:
-        conexao.rollback()
+        conexao.rollback()  # Desfaz tudo se der erro
         print("ERRO:", e)
         return jsonify({'ok': False, 'erro': str(e)}), 500
 
@@ -255,6 +273,8 @@ def api_registrarsaida():
         cursor.close()
         conexao.close()
 
+
+# ===== BUSCAR ITEM COMPLETO POR ID (usado ao alterar item) =====
 @app.route('/api/item_completo/<int:id>')
 def api_item_completo(id):
     conexao = banco()
@@ -266,7 +286,7 @@ def api_item_completo(id):
     return jsonify(item if item else {})
 
 
-# ========== ALTERAR ITEM ==========
+# ===== ALTERAR ITEM =====
 @app.route('/api/alteraritem/<int:id>', methods=['POST'])
 def alteraritem(id):
     nome          = request.form['nome']
@@ -281,6 +301,7 @@ def alteraritem(id):
     cursor = conexao.cursor()
 
     if imagem and imagem.filename != '':
+        # Se enviou nova imagem, salva e atualiza com ela
         caminho_imagem = imagem.filename
         imagem.save(os.path.join(app.config['UPLOAD_FOLDER'], imagem.filename))
         cursor.execute(
@@ -290,6 +311,7 @@ def alteraritem(id):
             (nome, categoria, descricao, preco, quantidade, estoqueminimo, caminho_imagem, id)
         )
     else:
+        # Se não enviou imagem, mantém a imagem antiga
         cursor.execute(
             """UPDATE estoque SET nome=%s, categoria=%s, descricao=%s,
                preco=%s, quantidade=%s, estoque_min=%s
@@ -307,6 +329,41 @@ def alteraritem(id):
         window.location.href = "/estoque";
     </script>
     """
+
+
+# ===== REGISTRAR DEVOLUÇÃO =====
+@app.route('/api/devolucao', methods=['POST'])
+def api_devolucao():
+    dados    = request.get_json()
+    nome     = dados.get('nome')       # nome do item devolvido
+    qtde     = dados.get('qtde')       # quantidade devolvida
+    status   = dados.get('status')     # 'parcial' ou 'total'
+    saida_id = dados.get('saida_id')   # ID da saída que está sendo devolvida
+
+    try:
+        conexao = banco()
+        cursor  = conexao.cursor()
+
+        # Soma a quantidade devolvida de volta no estoque
+        cursor.execute(
+            "UPDATE estoque SET quantidade = quantidade + %s WHERE nome = %s",
+            (qtde, nome)
+        )
+
+        # Salva o status e quantidade da devolução na tabela de saídas
+        cursor.execute(
+            "UPDATE saidas SET qtde_devolvida = %s, status_devolucao = %s WHERE id = %s",
+            (qtde, status, saida_id)
+        )
+
+        conexao.commit()
+        cursor.close()
+        conexao.close()
+        return jsonify({'ok': True})
+
+    except Exception as e:
+        print("ERRO DEVOLUÇÃO:", e)
+        return jsonify({'ok': False, 'erro': str(e)}), 500
 
 
 if __name__ == '__main__':

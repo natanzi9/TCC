@@ -8,7 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="static/fiep.jpg">
     <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ url_for('static', filename='main.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
 </head>
 
 <body onload="colorir()">
@@ -94,22 +94,31 @@
                         </thead>
                         <tbody>
                             {% for saida in saidas %}
-                            <tr>
+                            <tr data-id="{{ saida.id }}">
                                 <td>{{ saida.item }}</td>
                                 <td>{{ saida.qtde }}</td>
                                 <td>{{ saida.data or '-' }}</td>
                                 <td>{{ saida.solicitante or '-' }}</td>
                                 <td>{{ saida.almoxarife or '-' }}</td>
                                 <td>{{ saida.descricao or '-' }}</td>
-                                <td>{{ saida.devolucao or '-' }}</td>
+                                <td>
+                                    {% if saida.status_devolucao == 'parcial' %}
+                                    <span style="color:#F28B0C; font-weight:bold;">Parcial ({{ saida.qtde_devolvida
+                                        }})</span>
+                                    {% elif saida.status_devolucao == 'total' %}
+                                    <span style="color:#045cac; font-weight:bold;">Total</span>
+                                    {% elif saida.devolucao == 'Sim' %}
+                                    <button onclick="marcarDevolucao(this, 'parcial')"
+                                        style="background:#F28B0C; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer; margin-right:4px; font-weight:bold;">P</button>
+                                    <button onclick="marcarDevolucao(this, 'total')"
+                                        style="background:#045cac; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer; font-weight:bold;">T</button>
+                                    {% else %}
+                                    <span style="color:gray;">Não</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>
-</body>
-
 </html>
