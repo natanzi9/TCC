@@ -1,3 +1,5 @@
+import csv
+import io
 import os
 import bcrypt
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
@@ -366,6 +368,109 @@ def api_devolucao():
     except Exception as e:
         print("ERRO DEVOLUÇÃO:", e)
         return jsonify({'ok': False, 'erro': str(e)}), 500
+    
+
+# ===== IMPORTAR ESTOQUE VIA CSV =====
+@app.route("/api/importarcsv", methods=["POST"])
+def api_importarcsv():
+    if "arquivo_csv" not in request.files:
+        return jsonify({"ok": False, "erro": "Nenhum arquivo enviado"}), 400
+
+    arquivo = request.files["arquivo_csv"]
+
+    if arquivo.filename == "":
+        return jsonify({"ok": False, "erro": "Arquivo sem nome"}), 400
+
+    if not arquivo.filename.lower().endswith(".csv"):
+        return jsonify({"ok": False, "erro": "O arquivo precisa ser .csv"}), 400
+
+    try:
+        # 1. Lê os bytes puros do arquivo
+        dados_puros = arquivo.read()
+
+        # 2. Tenta decodificar como UTF-8; se falhar, usa ISO-8859-1 (padrão do Excel BR)
+        try:
+            conteudo = dados_puros.decode("utf-8")
+        except UnicodeDecodeError:
+            conteudo = dados_puros.decode("iso-8859-1")
+
+        io_string = io.StringIO(conteudo)
+
+        # Detecta se o separador é ponto e vírgula (;) ou vírgula (,) automaticamente
+        primeira_linha = io_string.readline()
+        separador = ";" if ";" in primeira_linha else ","
+        io_string.seek(0)  # Volta ao início do arquivo
+
+        leitor = csv.DictReader(io_string, delimiter=separador)
+
+        conexao = banco()
+        cursor = conexao.cursor()
+
+        linhas_importadas = 0
+
+        for linha in leitor:
+            # Busca as colunas exatamente como estão no seu CSV:
+            nome = linha.get("A (nome)")
+            categoria = linha.get("B (categoria)", "")
+            descricao = linha.get("C (descricao)", "")
+            preco_cru = linha.get("D (preco)", 0)
+            qtde_cru = linha.get("E (quantidade)", 0)
+            min_cru = linha.get("F (estoque_min)", 0)
+
+            # Se a coluna de nome estiver vazia, pula a linha
+            if not nome or nome.strip() == "":
+                continue  
+
+            # Converte valores numéricos tratando possíveis espaços ou vírgulas
+            try:
+                preco = float(str(preco_cru).replace(",", ".").strip())
+            except:
+                preco = 0.0
+
+            try:
+                quantidade = int(str(qtde_cru).strip())
+            except:
+                quantidade = 0
+
+            try:
+                estoque_min = int(str(min_cru).strip())
+            except:
+                estoque_min = 0
+
+            # EXECUTA APENAS UMA VEZ POR LINHA:
+            cursor.execute(
+                """INSERT INTO estoque (nome, categoria, descricao, preco, quantidade, estoque_min, imagem)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                (
+                    nome.strip(),
+                    categoria.strip(),
+                    descricao.strip(),
+                    preco,
+                    quantidade,
+                    estoque_min,
+                    None,
+                ),
+            )
+            linhas_importadas += 1
+
+        conexao.commit()
+        cursor.close()
+        conexao.close()
+
+        return jsonify(
+            {
+                "ok": True,
+                "mensagem": f"Sucesso! {linhas_importadas} itens foram importados.",
+            }
+        )
+
+    except Exception as e:
+        print("====== ERRO CRÍTICO NA IMPORTAÇÃO ======")
+        import traceback
+
+        traceback.print_exc()
+        print("========================================")
+        return jsonify({"ok": False, "erro": str(e)}), 500
 
 
 if __name__ == '__main__':

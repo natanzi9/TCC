@@ -65,7 +65,13 @@
             </tbody>
         </table>
     </div>
-    <button class="importar">IMPORTAR ESTOQUE 📩</button>
+    <div class="upload-container">
+        <label for="file-input" class="importar" style="cursor: pointer;">
+            Importar Estoque (.csv)
+        </label>
+        <input type="file" id="file-input" accept=".csv" style="display: none;" onchange="importarCSV(this)">
+    </div>
+
 </body>
 
 </html>

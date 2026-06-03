@@ -76,9 +76,19 @@ th {
     background-color: #135E9F;
     color: white;
 }
-.importar{
+.importar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 255px;
-    height: 30px;
+    height: 45px;
     background-color: #F28B0C;
     color: white;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
