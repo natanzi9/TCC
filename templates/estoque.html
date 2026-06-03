@@ -66,10 +66,11 @@
         </table>
     </div>
     <div class="upload-container">
-        <label for="file-input" class="importar" style="cursor: pointer;">
-            Importar Estoque (.csv)
-        </label>
-        <input type="file" id="file-input" accept=".csv" style="display: none;" onchange="importarCSV(this)">
+        <input type="file" id="csvInput" accept=".csv" style="display:none" onchange="importarCSV(this)">
+
+        <button onclick="document.getElementById('csvInput').click()">
+            Importar CSV
+        </button>
     </div>
 
 </body>

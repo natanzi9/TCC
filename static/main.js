@@ -320,71 +320,18 @@ function marcarDevolucao(btn, tipo) {
     }
 }
 
-// ===== IMPORTAR ARQUIVO CSV (VERSÃO DEFINITIVA) =====//
-function importarCSV(event) {
-    // Evita o comportamento duplo APENAS se o evento existir de verdade
-    if (event && typeof event.preventDefault === 'function') {
-        event.preventDefault();
-        event.stopPropagation();
-    }
+function importarCSV(input) {
+    const formData = new FormData();
+    formData.append('arquivo', input.files[0]);
 
-    // Cria o input de arquivo temporário na memória
-    const inputArquivo = document.createElement('input');
-    inputArquivo.type = 'file';
-    inputArquivo.accept = '.csv';
-
-    // Executa a lógica de envio quando o usuário escolhe o arquivo
-    inputArquivo.addEventListener('change', function () {
-        const arquivo = inputArquivo.files[0];
-        if (!arquivo) return;
-
-        // Mostra a animação de carregamento (SweetAlert2)
-        Swal.fire({
-            title: 'Importando dados...',
-            text: 'Por favor, aguarde enquanto processamos o arquivo.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // Prepara o arquivo para o envio
-        const formData = new FormData();
-        formData.append('arquivo_csv', arquivo);
-
-        // Envia para a rota do Flask
-        fetch('/api/importarcsv', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(dados => {
-            if (dados.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Sucesso!',
-                    text: dados.mensagem
-                }).then(() => {
-                    window.location.reload(); // Recarrega a página para atualizar o estoque
-                });
+    fetch('/api/importarcsv', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.ok) {
+                Swal.fire({ icon: 'success', title: `${resp.total} itens importados com sucesso!` })
+                    .then(() => window.location.href = '/estoque');
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro na importação',
-                    text: dados.erro
-                });
+                Swal.fire({ icon: 'error', title: 'Erro na importação', text: resp.erro });
             }
-        })
-        .catch(erro => {
-            console.error('Erro:', erro);
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro de conexão',
-                text: 'Não foi possível conectar ao servidor.'
-            });
         });
-    }, { once: true }); // Executa apenas uma vez para evitar loops
-
-    // Abre a janela do sistema operacional
-    inputArquivo.click();
 }
