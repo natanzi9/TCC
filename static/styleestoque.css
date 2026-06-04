@@ -92,3 +92,20 @@ th {
     transition: background-color 0.2s, transform 0.1s;
     box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
+.btn-foto {
+    background-color: #F28B0C;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    width: auto;
+    height: auto;
+    margin-left: 0;
+    font-size: unset;
+    color: unset;
+}
+
+.btn-foto img {
+    width: 22px !important;
+    height: 22px !important;
+}

@@ -47,6 +47,7 @@
                     <th width="20%">ITEN</th>
                     <th width="50%">DESCRIÇÃO</th>
                     <th width="8%">QUANTIDADE</th>
+                    <th width="8%">FOTO</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,6 +59,16 @@
                     <td>{{ item.nome }}</td>
                     <td>{{ item.descricao }}</td>
                     <td>{{ item.quantidade }}</td>
+                    <td>
+                        {% if item.imagem %}
+                        <button class="btn-foto"
+                            onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' })">
+                            <img src="{{ url_for('static', filename='icone de imagem.png') }}">
+                        </button>
+                        {% else %}
+                        <span style="color:gray;font-size:12px;">sem foto</span>
+                        {% endif %}
+                    </td> 
                 </tr>
 
                 {% endfor %}

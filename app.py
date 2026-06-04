@@ -35,7 +35,7 @@ def home():
     cursor = conexao.cursor(dictionary=True)
 
     # Busca todos os itens do estoque, do mais recente para o mais antigo
-    cursor.execute("SELECT nome, quantidade, imagem FROM estoque ORDER BY id DESC")
+    cursor.execute("SELECT nome, quantidade, imagem FROM estoque ORDER BY id DESC LIMIT 10")
     ultimos = cursor.fetchall()
 
     # Busca todas as saídas registradas, incluindo status de devolução
