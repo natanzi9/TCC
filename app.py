@@ -77,56 +77,48 @@ def criarconta():
 # ===== LOGIN =====
 @app.route('/api/login', methods=['POST'])
 def apilogin():
-    username = request.form['username']
-    senha    = request.form['senha']
-    tipo     = request.form.get('tipo', '')
 
-    # Login do administrador: verifica usuário e senha fixos
-    if tipo == 'adm':
-        if username.lower() == 'admin' and senha == '123':
-            session['usuario'] = username
-            session['tipo']    = 'adm'
-            return redirect(url_for('home'))
-        else:
-            return """
-            <script>
-                alert("Credenciais de administrador incorretas");
-                window.location.href = "/";
-            </script>
-            """
+    username_digitado = request.form['username']
+    senha_digitada = request.form['senha']
+    tipo = request.form.get('tipo', '')
 
-    # Login de usuário comum: não pode usar o login do administrador
-    if tipo == 'user':
-        if username.lower() == 'admin':
-            return """
-            <script>
-                alert("Use o tipo ADM para entrar como administrador");
-                window.location.href = "/";
-            </script>
-            """
-
-    # Busca o usuário no banco pelo nome
     conexao = banco()
-    cursor  = conexao.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (username,))
+    cursor = conexao.cursor(dictionary=True)
+
+    # Decide qual tabela consultar
+    if tipo == 'adm':
+        cursor.execute(
+            "SELECT * FROM administrador WHERE usuario = %s",
+            (username_digitado,)
+        )
+    else:
+        cursor.execute(
+            "SELECT * FROM usuario WHERE usuario = %s",
+            (username_digitado,)
+        )
+        
     usuario = cursor.fetchone()
+
     cursor.close()
     conexao.close()
 
-    # Compara a senha digitada com o hash salvo no banco usando bcrypt
-    if usuario and bcrypt.checkpw(senha.encode('utf-8'), usuario['senha'].encode('utf-8')):
-        session['usuario'] = username
-        session['tipo']    = 'user'
+    # Verifica senha usando bcrypt
+    if usuario and bcrypt.checkpw(
+        senha_digitada.encode('utf-8'),
+        usuario['senha'].encode('utf-8')
+    ):
+
+        session['usuario'] = username_digitado
+        session['tipo'] = tipo
+
         return redirect(url_for('home'))
-    else:
-        return """
-        <script>
-            alert("Usuário ou senha incorretos");
-            window.location.href = "/";
-        </script>
-        """
 
-
+    return """
+<script>
+    alert("Usuário ou senha incorretos");
+    window.location.href = "/";
+</script>
+"""
 # ===== CRIAR CONTA =====
 @app.route('/api/criarconta', methods=['POST'])
 def api_criarconta():

@@ -5,8 +5,10 @@ CREATE TABLE administrador (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario VARCHAR(180) NOT NULL,
     senha VARCHAR(255)
-
 );
+
+INSERT INTO administrador (usuario, senha)
+VALUES ('admin','$2b$12$6HyIIzP0o3RHZCITdtYD3.o3R1tr.XcdMdfoXOYc2gSV2avE7l6N6');
 
 CREATE TABLE usuario (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -47,4 +49,3 @@ UPDATE estoque SET imagem = 'faparuso.jpg' WHERE id = 1;
 ALTER TABLE saidas 
     ADD COLUMN qtde_devolvida INT DEFAULT 0,
     ADD COLUMN status_devolucao VARCHAR(20) DEFAULT NULL;
-DROP DATABASE tcc;

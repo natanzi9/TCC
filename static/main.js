@@ -30,56 +30,42 @@ function a() {
 
 // ===== LÓGICA DA TELA DE LOGIN =====
 document.addEventListener('DOMContentLoaded', function () {
-    // Pega os elementos da tela de login
-    const checkUser = document.getElementById('checkUser');
-    const checkAdm = document.getElementById('checkAdm');
-    const linkCriar = document.getElementById('linkCriar');
-    const inputLogin = document.getElementById('login');
-    const inputSenha = document.getElementById('senha');
 
-    // Se algum desses elementos não existir (ex: não está na tela de login), para aqui
-    if (!checkUser || !checkAdm || !linkCriar || !inputLogin || !inputSenha) return;
+const checkUser = document.getElementById('checkUser');
+const checkAdm = document.getElementById('checkAdm');
+const linkCriar = document.getElementById('linkCriar');
 
-    function verificar() {
-        // Verifica se o login e senha digitados são do administrador
-        const loginCorreto = inputLogin.value.toLowerCase() === 'admin';
-        const senhaCorreta = inputSenha.value === '123';
-        const isAdm = checkAdm.checked;
-        const isUser = checkUser.checked;
+if (!checkUser || !checkAdm || !linkCriar) return;
 
-        // O link de criar conta só fica disponível se for ADM com credenciais certas
-        const podeCriar = isAdm && loginCorreto && senhaCorreta;
+function verificarVisual() {
 
-        if (podeCriar) {
-            // Libera o link de criar conta
-            linkCriar.style.pointerEvents = 'auto';
-            linkCriar.style.opacity = '1';
-            linkCriar.style.cursor = 'pointer';
-        } else {
-            // Bloqueia o link de criar conta
-            linkCriar.style.pointerEvents = 'none';
-            linkCriar.style.opacity = '0.4';
-            linkCriar.style.cursor = 'not-allowed';
-        }
+    if (checkAdm.checked) {
+        linkCriar.style.pointerEvents = 'auto';
+        linkCriar.style.opacity = '1';
+        linkCriar.style.cursor = 'pointer';
+    } else {
+        linkCriar.style.pointerEvents = 'none';
+        linkCriar.style.opacity = '0.4';
+        linkCriar.style.cursor = 'not-allowed';
     }
+}
 
-    // Garante que só um checkbox fica marcado por vez (ADM ou USER, não os dois)
-    checkUser.addEventListener('change', function () {
-        if (this.checked) checkAdm.checked = false;
-        verificar();
-    });
+checkUser.addEventListener('change', function () {
+    if (this.checked) {
+        checkAdm.checked = false;
+    }
+    verificarVisual();
+});
 
-    checkAdm.addEventListener('change', function () {
-        if (this.checked) checkUser.checked = false;
-        verificar();
-    });
+checkAdm.addEventListener('change', function () {
+    if (this.checked) {
+        checkUser.checked = false;
+    }
+    verificarVisual();
+});
 
-    // Verifica sempre que o usuário digita login ou senha
-    inputLogin.addEventListener('input', verificar);
-    inputSenha.addEventListener('input', verificar);
+verificarVisual();
 
-    // Roda uma vez ao carregar para definir o estado inicial
-    verificar();
 });
 
 // ===== PREVIEW DA IMAGEM AO ADICIONAR ITEM =====
