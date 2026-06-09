@@ -30,42 +30,81 @@ function a() {
 
 // ===== LÓGICA DA TELA DE LOGIN =====
 document.addEventListener('DOMContentLoaded', function () {
+    const checkUser = document.getElementById('checkUser');
+    const checkAdm = document.getElementById('checkAdm');
+    const linkCriar = document.getElementById('linkCriar');
+    
+    // Ajustado para o ID correto do seu HTML: 'login'
+    const inputUser = document.getElementById('login');
+    const inputSenha = document.getElementById('senha');
 
-const checkUser = document.getElementById('checkUser');
-const checkAdm = document.getElementById('checkAdm');
-const linkCriar = document.getElementById('linkCriar');
+    // Se não achar os elementos, avisa no F12 para ajudar no teste
+    if (!checkUser || !checkAdm || !linkCriar || !inputUser || !inputSenha) {
+        console.error("ERRO: Elementos do formulário não foram encontrados. Verifique os IDs no HTML.");
+        return;
+    }
 
-if (!checkUser || !checkAdm || !linkCriar) return;
-
-function verificarVisual() {
-
-    if (checkAdm.checked) {
-        linkCriar.style.pointerEvents = 'auto';
-        linkCriar.style.opacity = '1';
-        linkCriar.style.cursor = 'pointer';
-    } else {
+    function bloquearLink() {
         linkCriar.style.pointerEvents = 'none';
         linkCriar.style.opacity = '0.4';
         linkCriar.style.cursor = 'not-allowed';
     }
-}
 
-checkUser.addEventListener('change', function () {
-    if (this.checked) {
-        checkAdm.checked = false;
+    function validarCredenciaisAdm() {
+        // Se a caixinha ADM não estiver marcada ou faltar digitar algo, bloqueia o link
+        if (!checkAdm.checked || !inputUser.value.trim() || !inputSenha.value.trim()) {
+            bloquearLink();
+            return;
+        }
+
+        // Faz a checagem em tempo real lá no Python
+        fetch('/api/checar_adm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: inputUser.value.trim(),
+                senha: inputSenha.value.trim()
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.valido) {
+                // Se a senha e usuário do admin estiverem certos, libera o link!
+                linkCriar.style.styleWithCSS = true;
+                linkCriar.style.pointerEvents = 'auto';
+                linkCriar.style.opacity = '1';
+                linkCriar.style.cursor = 'pointer';
+            } else {
+                bloquearLink();
+            }
+        })
+        .catch(err => {
+            console.error("Erro ao conectar com o servidor:", err);
+            bloquearLink();
+        });
     }
-    verificarVisual();
-});
 
-checkAdm.addEventListener('change', function () {
-    if (this.checked) {
-        checkUser.checked = false;
-    }
-    verificarVisual();
-});
+    // Regra dos Checkboxes (Desmarca um quando o outro é marcado)
+    checkUser.addEventListener('change', function () {
+        if (this.checked) {
+            checkAdm.checked = false;
+            bloquearLink();
+        }
+    });
 
-verificarVisual();
+    checkAdm.addEventListener('change', function () {
+        if (this.checked) {
+            checkUser.checked = false;
+            validarCredenciaisAdm(); 
+        }
+    });
 
+    // Monitora o teclado enquanto o administrador digita
+    inputUser.addEventListener('input', validarCredenciaisAdm);
+    inputSenha.addEventListener('input', validarCredenciaisAdm);
+
+    // Inicializa a página com o link bloqueado
+    bloquearLink();
 });
 
 // ===== PREVIEW DA IMAGEM AO ADICIONAR ITEM =====

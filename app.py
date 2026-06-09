@@ -119,9 +119,56 @@ def apilogin():
     window.location.href = "/";
 </script>
 """
+# ===== ROTA AUXILIAR PARA O JAVASCRIPT CHECAR CREDENCIAIS DO ADM =====
+@app.route('/api/checar_adm', methods=['POST'])
+def api_checar_adm():
+    dados = request.get_json() or {}
+    username = dados.get('username', '').strip()
+    senha = dados.get('senha', '').strip()
+
+    if not username or not senha:
+        return jsonify({'valido': False})
+
+    conexao = banco()
+    cursor = conexao.cursor(dictionary=True)
+
+    # Busca o administrador no banco
+    cursor.execute("SELECT * FROM administrador WHERE usuario = %s", (username,))
+    usuario = cursor.fetchone()
+
+    cursor.close()
+    conexao.close()
+
+    if usuario:
+        # Pega a hash do banco e confere se a senha digitada bate
+        senha_banco = usuario['senha']
+        try:
+            if bcrypt.checkpw(senha.encode('utf-8'), senha_banco.encode('utf-8')):
+                session['usuario'] = username
+                session['tipo'] = 'adm'
+                return jsonify({'valido': True})
+        except Exception:
+            # Caso a senha no banco por algum motivo esteja em texto puro (sem criptografia)
+            if senha == senha_banco:
+                session['usuario'] = username
+                session['tipo'] = 'adm'
+                return jsonify({'valido': True})
+
+    return jsonify({'valido': False})
+
+
 # ===== CRIAR CONTA =====
 @app.route('/api/criarconta', methods=['POST'])
 def api_criarconta():
+    # Segurança extra: impede que requisições diretas via Postman/Insomnia criem contas
+    if 'usuario' not in session or session.get('tipo') != 'adm':
+        return """
+        <script>
+            alert("Operação não autorizada!");
+            window.location.href = "/";
+        </script>
+        """
+
     username  = request.form['username']
     senha     = request.form['senha']
     confirmar = request.form['confirmar']
@@ -168,7 +215,7 @@ def api_criarconta():
     return """
     <script>
         alert("Conta criada com sucesso!");
-        window.location.href = "/";
+        window.location.href = "/estoque"; // Redireciona para onde achar melhor
     </script>
     """
 
