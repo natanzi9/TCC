@@ -68,7 +68,7 @@
                         {% else %}
                         <span style="color:gray;font-size:12px;">sem foto</span>
                         {% endif %}
-                    </td> 
+                    </td>
                 </tr>
 
                 {% endfor %}
@@ -81,6 +81,10 @@
 
         <button onclick="document.getElementById('csvInput').click()">
             Importar CSV
+        </button>
+
+        <button class="exportar" onclick="exportarCSV()">
+            Exportar CSV
         </button>
     </div>
 

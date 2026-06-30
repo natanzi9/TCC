@@ -14,11 +14,10 @@ os.makedirs('static/uploads', exist_ok=True)  # Cria a pasta se não existir
 # ===== CONEXÃO COM O BANCO DE DADOS =====
 def banco():
     return mysql.connector.connect(
-        host="192.168.4.60",
+        host="localhost",
         user="root",
         password="",
-        database="tcc",
-        port=3306
+        database="tcc"
     )
 
 
@@ -460,6 +459,72 @@ def api_importarcsv():
         print("ERRO IMPORTAR CSV:", e)
         return jsonify({'ok': False, 'erro': str(e)}), 500
 
+# ===== EXPORTAR CSV =====
+from flask import make_response  # Certifique-se de que essa importação está no topo ou use aqui dentro
+
+@app.route('/api/exportarcsv')
+def api_exportarcsv():
+    try:
+        # 1. Abre a conexão com o banco de dados
+        conexao = banco()
+        cursor = conexao.cursor(dictionary=True)
+        
+        # 2. Busca todos os itens cadastrados no estoque
+        cursor.execute("SELECT * FROM estoque ORDER BY id ASC")
+        itens_estoque = cursor.fetchall()
+        
+        cursor.close()
+        conexao.close()
+
+        # 3. Cria o arquivo em memória usando io.StringIO
+        output = io.StringIO()
+        writer = csv.writer(output, delimiter=';')
+        
+        # Cabeçalhos das colunas
+        writer.writerow(['A (nome)', 'B (categoria)', 'C (descricao)', 'D (preco)', 'E (quantidade)', 'F (estoque_min)'])
+        
+        # 4. Escreve os itens tratando valores Nulos (None) para não quebrar o script
+        for item in itens_estoque:
+            # Tratamento para o preço (evita quebrar se vier nulo ou formato inválido)
+            preco_val = item.get('preco') if item.get('preco') is not None else 0.0
+            preco_formatado = str(preco_val).replace('.', ',')
+            
+            writer.writerow([
+                item.get('nome', ''),
+                item.get('categoria', '') if item.get('categoria') else '',
+                item.get('descricao', '') if item.get('descricao') else '',
+                preco_formatado,
+                item.get('quantidade', 0),
+                item.get('estoque_min', 0)
+            ])
+        
+        # 5. Captura o texto gerado pelo StringIO e fecha o objeto
+        conteudo_puro = output.getvalue()
+        output.close()
+        
+        # 6. Converte o texto para bytes usando 'utf-8-sig'.
+        # Isso gera o sinalizador (BOM) perfeito que obriga o Excel a reconhecer os acentos.
+        conteudo_bytes = conteudo_puro.encode('utf-8-sig')
+        
+        # 7. Cria a resposta HTTP correta enviando os BYTES
+        response = make_response(conteudo_bytes)
+        response.headers["Content-Disposition"] = "attachment; filename=estoque.csv"
+        response.headers["Content-Type"] = "text/csv; charset=utf-8"
+        
+        return response
+
+    except Exception as e:
+        # Esse print vai mostrar o erro exato no seu terminal/prompt do Python!
+        print("====== ERRO EXATO NO CSV ======")
+        print(e)
+        print("===============================")
+        
+        return """
+        <script>
+            alert("Erro ao gerar o arquivo CSV. Verifique o terminal do servidor.");
+            window.location.href = "/estoque";
+        </script>
+        """
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0',port=8080)
+    app.run(debug=True, host='0.0.0.0',port=80)

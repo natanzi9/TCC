@@ -360,3 +360,6 @@ function importarCSV(input) {
             }
         });
 }
+function exportarCSV() {
+    window.location.href = '/api/exportarcsv';
+}
