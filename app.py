@@ -28,6 +28,18 @@ def login():
     # Página inicial de login
     return render_template("index.html")
 
+@app.route('/api/apagar_estoque', methods=['POST'])
+def apagar_estoque():
+    conexao = banco()
+    cursor = conexao.cursor()
+
+    cursor.execute("TRUNCATE TABLE estoque")
+
+    conexao.commit()
+    cursor.close()
+    conexao.close()
+
+    return redirect(url_for('estoque'))
 
 @app.route('/home')
 def home():

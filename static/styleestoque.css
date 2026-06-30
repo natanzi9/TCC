@@ -110,3 +110,10 @@ th {
     width: 22px !important;
     height: 22px !important;
 }
+.upload-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}

@@ -62,7 +62,7 @@
                     <td>
                         {% if item.imagem %}
                         <button class="btn-foto"
-                            onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' })">
+                             onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' });">
                             <img src="{{ url_for('static', filename='icone de imagem.png') }}">
                         </button>
                         {% else %}
@@ -86,7 +86,13 @@
         <button class="exportar" onclick="exportarCSV()">
             Exportar CSV
         </button>
+        <form action="/api/apagar_estoque" method="POST">
+        <button type="submit" class="apagar">
+        Apagar Estoque
+    </button>
+
     </div>
+    
 
 </body>
 
