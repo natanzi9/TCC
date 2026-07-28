@@ -117,3 +117,39 @@ th {
     gap: 10px;
     margin-bottom: 20px;
 }
+/* Container alinhando lado a lado */
+.input1 {
+    display: flex;
+    align-items: center; /* Centraliza verticalmente o texto com o campo */
+    justify-content: center; /* Centraliza o bloco na tela */
+    gap: 8px; /* Espaço entre o texto e o campo */
+    margin: 20px auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Label menor e ao lado */
+.input1 label {
+    font-size: 13px; /* Tamanho menor */
+    font-weight: 600;
+    color: #1a5276; /* Azul escuro combinando com a tabela */
+    text-transform: lowercase; /* Mantém em minúsculo conforme seu exemplo */
+}
+
+/* Campo de busca estilizado */
+.input1 input {
+    width: 200px;
+    padding: 8px 14px;
+    font-size: 14px;
+    color: #333;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 20px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+/* Efeito ao clicar no campo */
+.input1 input:focus {
+    border-color: #1d6fa5;
+    box-shadow: 0 0 6px rgba(29, 111, 165, 0.3);
+    width: 240px; /* Expande levemente ao focar */
+}

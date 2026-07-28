@@ -38,34 +38,51 @@ h1 {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Container do primeiro campo */
 .input1 {
-    font-size: 30px;
+    font-size: 18px; /* Diminuído para um tamanho proporcional */
     color: #ffffff;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    margin: 0 auto;
-    padding-top: 80px;
+    margin: 25px auto 0 auto; /* Reduzido de 80px para 25px */
     width: fit-content;
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Espaço pequeno e perfeito entre a label e o input */
 }
 
+/* Container do segundo campo */
 .input2 {
-    font-size: 30px;
+    font-size: 18px;
     color: #ffffff;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    margin: 40px auto 0 auto;
+    margin: 15px auto 0 auto; /* Reduzido de 40px para 15px */
     width: fit-content;
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Espaço pequeno entre a label e o input */
 }
 
+/* Estilo dos campos */
 input[type="text"],
 input[type="password"] {
-    font-size: 22px;
-    padding: 6px 12px;
-    width: 350px;
+    font-size: 16px;
+    padding: 10px 14px;
+    width: 300px;
     border-radius: 8px;
     border: 1px solid #ccc;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
 }
 
+/* Brilho laranja ao clicar */
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: #F28B0C;
+    box-shadow: 0 0 8px rgba(242, 139, 12, 0.5);
+}
 button {
     background-color: #F28B0C;
     border-radius: 6px;
@@ -78,6 +95,22 @@ button {
     cursor: pointer;
     display: block;
     margin: 60px auto 0 auto;
+    
+    /* Prepara a animação suave */
+    transition: transform 0.2s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Adicionado o :hover para animar ao passar o mouse */
+button:hover {
+    background-color: #E07B00; /* Dica: escurecer levemente a cor no hover melhora o efeito */
+    transform: translateY(-3px); /* Eleva o botão */
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2); /* Sombra aparece no hover */
+}
+
+/* Efeito ao clicar */
+button:active {
+    transform: translateY(-1px); /* Baixa levemente ao clicar */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 a {
@@ -86,6 +119,20 @@ a {
     display: block;
     margin-top: 25px;
     text-decoration: none;
+    
+    /* Prepara a animação suave para o brilho */
+    transition: text-shadow 0.3s ease, color 0.3s ease;
+}
+
+/* Efeito quando passa o mouse por cima */
+a:hover {
+    color: #FFAE42; /* Deixa o texto levemente mais claro */
+    
+    /* Camadas de sombra que criam a iluminação (néon/brilho) */
+    text-shadow: 
+        0 0 5px #F28B0C,
+        0 0 10px #F28B0C,
+        0 0 20px #F28B0C;
 }
 .permissao {
     display: flex;

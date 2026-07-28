@@ -93,7 +93,24 @@ button {
     font-size: 18px;
     cursor: pointer;
     margin-left: 0;
+    
+    /* Prepara o movimento suave */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
+
+/* Efeito ao passar o mouse */
+.btn-adicionar:hover {
+    background-color: #d97a0a; /* Fica levemente mais escuro */
+    transform: translateY(-3px); /* Eleva o botão */
+    box-shadow: 0 5px 12px rgba(242, 139, 12, 0.4); /* Sombra com a cor do botão */
+}
+
+/* Efeito ao clicar */
+.btn-adicionar:active {
+    transform: translateY(-1px); /* Baixa um pouco para simular o clique */
+    box-shadow: 0 2px 6px rgba(242, 139, 12, 0.4);
+}
+
 
 .btn-registrar {
     background-color: #135E9F;
@@ -105,6 +122,22 @@ button {
     font-size: 18px;
     cursor: pointer;
     margin-left: 0;
+    
+    /* Prepara o movimento suave */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efeito ao passar o mouse */
+.btn-registrar:hover {
+    background-color: #0e487a; /* Fica levemente mais escuro */
+    transform: translateY(-3px); /* Eleva o botão */
+    box-shadow: 0 5px 12px rgba(19, 94, 159, 0.4); /* Sombra com a cor do botão */
+}
+
+/* Efeito ao clicar */
+.btn-registrar:active {
+    transform: translateY(-1px); /* Baixa um pouco para simular o clique */
+    box-shadow: 0 2px 6px rgba(19, 94, 159, 0.4);
 }
 
 label {
