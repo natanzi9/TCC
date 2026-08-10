@@ -170,7 +170,6 @@ function abrirAlterar() {
 }
 
 // ===== ADICIONAR ITEM NA TABELA DE SAÍDAS =====
-// ===== ADICIONAR ITEM NA TABELA DE SAÍDAS =====
 function adicionarNaTabela() {
     const id_item = document.getElementById('id_item').value.trim();
     const qtde = document.getElementById('qtde').value.trim();
@@ -363,3 +362,27 @@ function importarCSV(input) {
 function exportarCSV() {
     window.location.href = '/api/exportarcsv';
 }
+document.addEventListener("DOMContentLoaded", function() {
+    const inputPesquisa = document.getElementById('pesquisa');
+    
+    // Verifica se o input existe na página atual antes de rodar o código
+    if (inputPesquisa) {
+        const linhasTabela = document.querySelectorAll('table tbody tr');
+
+        inputPesquisa.addEventListener('input', function() {
+            const termoBusca = inputPesquisa.value.toLowerCase().trim();
+
+            linhasTabela.forEach(linha => {
+                // Pega todo o texto contido na linha da tabela
+                const textoLinha = linha.textContent.toLowerCase();
+
+                // Se o texto da linha incluir o que foi digitado, exibe a linha; caso contrário, oculta
+                if (textoLinha.includes(termoBusca)) {
+                    linha.style.display = ''; // Deixa o comportamento padrão da tabela (table-row)
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+        });
+    }
+});

@@ -14,10 +14,10 @@ os.makedirs('static/uploads', exist_ok=True)  # Cria a pasta se não existir
 # ===== CONEXÃO COM O BANCO DE DADOS =====
 def banco():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="tcc"
+        host=os.getenv("DB_HOST", "db_almox"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", "root"),
+        database=os.getenv("DB_NAME", "tcc")  # Correção aplicada aqui
     )
 
 
@@ -539,4 +539,4 @@ def api_exportarcsv():
         """
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0',port=80)
+    app.run(host='0.0.0.0', port=5000, debug=True)
