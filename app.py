@@ -14,12 +14,11 @@ os.makedirs('static/uploads', exist_ok=True)  # Cria a pasta se não existir
 # ===== CONEXÃO COM O BANCO DE DADOS =====
 def banco():
     return mysql.connector.connect(
-        host=os.getenv("DB_HOST", "db_almox"),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", "root"),
-        database=os.getenv("DB_NAME", "tcc")  # Correção aplicada aqui
+        host="localhost",
+        user="root",
+        password="",  # <--- Coloque a senha direta aqui para testar
+        database="tcc"
     )
-
 
 # ===== PÁGINAS =====
 
@@ -69,7 +68,7 @@ def estoque():
     conexao = banco()
     cursor = conexao.cursor(dictionary=True)
     # Busca todos os itens do estoque
-    cursor.execute("SELECT * FROM estoque")
+    cursor.execute("SELECT * FROM estoque ORDER BY id ASC")
     itens = cursor.fetchall()
     cursor.close()
     conexao.close()
@@ -538,5 +537,128 @@ def api_exportarcsv():
         </script>
         """
 
+@app.route('/api/estoque', methods=['GET'])
+def api_get_estoque():
+    try:
+        conexao = banco()
+        cursor = conexao.cursor(dictionary=True)
+        
+        cursor.execute("SELECT * FROM estoque")
+        itens = cursor.fetchall()
+        
+        cursor.close()
+        conexao.close()
+        
+        return jsonify({
+            'sucesso': True,
+            'total_itens': len(itens),
+            'estoque': itens
+        }), 200
+
+    except Exception as e:
+        print("ERRO AO BUSCAR ESTOQUE:", e)
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+@app.route('/api/apagarestoque/<int:id_item>', methods=['DELETE'])
+def api_delete_estoque(id_item):
+    try:
+        conexao = banco()
+        cursor = conexao.cursor()
+        
+        sql = "DELETE FROM estoque WHERE id = %s"
+        
+        cursor.execute(sql, (id_item,))
+        conexao.commit()
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conexao.close()
+            return jsonify({
+                'sucesso': False,
+                'erro': 'Item não encontrado com o ID informado.'
+            }), 404
+            
+        cursor.close()
+        conexao.close()
+        
+        return jsonify({
+            'sucesso': True,
+            'mensagem': f'Item com ID {id_item} deletado com sucesso!'
+        }), 200
+
+    except Exception as e:
+        print("ERRO AO DELETAR ITEM DO ESTOQUE:", e)
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+@app.route('/api/mostraruser', methods=['GET'])
+def api_mostra_users():
+    try:
+        conexao = banco()
+        cursor = conexao.cursor(dictionary=True)
+        
+        cursor.execute("SELECT * FROM usuario")
+        usuario = cursor.fetchall()
+        
+        cursor.close()
+        conexao.close()
+        
+        return jsonify({
+            'sucesso': True,
+            'usuario': len(usuario),
+            'usuarios': usuario
+        }), 200
+
+    except Exception as e:
+        print("ERRO AO BUSCAR USUARIO:", e)
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+from flask import Flask, request, jsonify
+
+# (Seu código existente de conexão e da rota GET continua aqui...)
+
+@app.route('/api/adicionarestoque', methods=['POST'])
+def api_post_estoque():
+    try:
+        # Pega os dados JSON enviados na requisição
+        dados = request.get_json()
+        
+        # Valida se os campos necessários foram enviados 
+        # (Ajuste os nomes dos campos conforme as colunas da sua tabela 'estoque')
+        nome = dados.get('nome')
+        quantidade = dados.get('quantidade')
+        preco = dados.get('preco')
+        
+        if not nome or quantidade is None or preco is None:
+            return jsonify({
+                'sucesso': False,
+                'erro': 'Campos obrigatórios ausentes (nome, quantidade, preco).'
+            }), 400
+
+        conexao = banco()
+        cursor = conexao.cursor()
+        
+        # Comando SQL para inserir o novo item
+        sql = "INSERT INTO estoque (nome, quantidade, preco) VALUES (%s, %s, %s)"
+        valores = (nome, quantidade, preco)
+        
+        cursor.execute(sql, valores)
+        conexao.commit() # Salva as alterações no banco de dados
+        
+        # Pega o ID gerado para o novo item inserido
+        novo_id = cursor.lastrowid
+        
+        cursor.close()
+        conexao.close()
+        
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Item cadastrado com sucesso!',
+            'id': novo_id
+        }), 201
+
+    except Exception as e:
+        print("ERRO AO CADASTRAR ITEM NO ESTOQUE:", e)
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+    
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5010, debug=True)
