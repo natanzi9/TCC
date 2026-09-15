@@ -97,7 +97,7 @@ def apilogin():
     cursor = conexao.cursor(dictionary=True)
 
     # Decide qual tabela consultar
-    if tipo == 'adm':
+    if tipo == 'adm':   
         cursor.execute(
             "SELECT * FROM administrador WHERE usuario = %s",
             (username_digitado,)
@@ -659,6 +659,84 @@ def api_post_estoque():
     except Exception as e:
         print("ERRO AO CADASTRAR ITEM NO ESTOQUE:", e)
         return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+@app.route('/api/adicionaruser', methods=['POST'])
+def api_post_user():
+    try:
+        dados = request.get_json()
+
+        usuario = dados.get('usuario')
+        senha = dados.get('senha')
+
+        if not usuario or senha is None:
+            return jsonify({
+                'sucesso': False,
+                'erro': 'Campos obrigatórios ausentes (usuario, senha).'
+            }), 400
+
+        conexao = banco()
+        cursor = conexao.cursor()
+
+        sql ="INSERT INTO usuario (usuario, senha) VALUES (%s, %s)"
+
+        valores = (usuario, senha)
+
+        cursor.execute(sql, valores)
+        conexao.commit()
+
+        novo_id = cursor.lastrowid
+
+        cursor.close()
+        conexao.close()
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Usuário cadastrado com sucesso!',
+            'id': novo_id
+        }), 201
+
+    except Exception as e:
+        print("ERRO AO CADASTRAR USUARIO:", e)
+        return jsonify({
+            'sucesso': False,
+            'erro': str(e)
+        }), 500
+
+@app.route('/api/remover/<int:id_usuario>', methods=['DELETE'])
+def remover_usuario(id_usuario):
+    try:
+        conexao = banco()
+        cursor = conexao.cursor()
+
+        sql = "DELETE FROM usuario WHERE id = %s"
+        cursor.execute(sql, (id_usuario,))
+
+        if cursor.rowcount == 0:
+            cursor.close()
+            conexao.close()
+
+            return jsonify({
+                'sucesso': False,
+                'erro': 'Usuário não encontrado.'
+            }), 404
+
+        conexao.commit()
+
+        cursor.close()
+        conexao.close()
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': f'Usuário {id_usuario} removido com sucesso!'
+        }), 200
+
+    except Exception as e:
+        print("ERRO AO REMOVER USUARIO:", e)
+
+        return jsonify({
+            'sucesso': False,
+            'erro': str(e)
+        }), 500
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5010, debug=True)
