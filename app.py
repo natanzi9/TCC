@@ -232,40 +232,46 @@ def api_criarconta():
 
 
 # ===== ADICIONAR ITEM COM IMAGEM =====
-@app.route('/api/adicionaritem', methods=['POST'])
-def adicionaritem():
-    nome          = request.form['nome']
-    categoria     = request.form['categoria']
-    descricao     = request.form['descricao']
-    preco         = request.form['preco']
-    quantidade    = request.form['quantidade']
-    estoqueminimo = request.form['estoqueminimo']
+@app.route('/api/adicionarestoque', methods=['POST'])
+def api_post_estoque():
+    try:
+        dados = request.get_json()
+        
+        nome = dados.get('nome')
+        quantidade = dados.get('quantidade', 0)
+        preco = dados.get('preco', 0.0)
+        descricao = dados.get('descricao', '')
+        categoria = dados.get('categoria', '')
+        
+        if not nome:
+            return jsonify({
+                'sucesso': False,
+                'erro': 'O campo nome é obrigatório.'
+            }), 400
 
-    # Salva a imagem na pasta de uploads se foi enviada
-    imagem = request.files.get('imagem')
-    caminho_imagem = None
-    if imagem and imagem.filename != '':
-        caminho_imagem = imagem.filename
-        imagem.save(os.path.join(app.config['UPLOAD_FOLDER'], imagem.filename))
+        conexao = banco()
+        cursor = conexao.cursor()
+        
+        # Insere todos os campos na tabela estoque
+        sql = "INSERT INTO estoque (nome, quantidade, preco, descricao, categoria) VALUES (%s, %s, %s, %s, %s)"
+        valores = (nome, quantidade, preco, descricao, categoria)
+        
+        cursor.execute(sql, valores)
+        conexao.commit()
+        
+        novo_id = cursor.lastrowid
+        cursor.close()
+        conexao.close()
+        
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Item cadastrado com sucesso!',
+            'id': novo_id
+        }), 201
 
-    # Insere o item no banco de dados
-    conexao = banco()
-    cursor = conexao.cursor()
-    cursor.execute(
-        """INSERT INTO estoque (nome, categoria, descricao, preco, quantidade, estoque_min, imagem)
-           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-        (nome, categoria, descricao, preco, quantidade, estoqueminimo, caminho_imagem)
-    )
-    conexao.commit()
-    cursor.close()
-    conexao.close()
-
-    return """
-    <script>
-        alert("Item adicionado com sucesso!");
-        window.location.href = "/estoque";
-    </script>
-    """
+    except Exception as e:
+        print("ERRO AO CADASTRAR ITEM NO ESTOQUE:", e)
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
 
 
 # ===== BUSCAR ITEM POR ID (usado na tela de saídas) =====

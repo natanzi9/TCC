@@ -49,7 +49,7 @@
             <thead>
                 <tr>
                     <th width="10%">ID</th>
-                    <th width="20%">ITEN</th>
+                    <th width="20%">ITEM</th>
                     <th width="50%">DESCRIÇÃO</th>
                     <th width="8%">QUANTIDADE</th>
                     <th width="8%">FOTO</th>
@@ -67,7 +67,7 @@
                     <td>
                         {% if item.imagem %}
                         <button class="btn-foto"
-                             onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' });">
+                            onclick="Swal.fire({ imageUrl: '/static/uploads/{{ item.imagem }}', imageHeight: 400, imageAlt: 'Imagem do item' });">
                             <img src="{{ url_for('static', filename='icone de imagem.png') }}">
                         </button>
                         {% else %}
@@ -81,6 +81,7 @@
             </tbody>
         </table>
     </div>
+
     <div class="upload-container">
         <input type="file" id="csvInput" accept=".csv" style="display:none" onchange="importarCSV(this)">
 
@@ -92,12 +93,28 @@
             Exportar CSV
         </button>
         <form action="/api/apagar_estoque" method="POST">
-        <button type="submit" class="apagar">
-        Apagar Estoque
-    </button>
-
+            <button type="submit" class="apagar">
+                Apagar Estoque
+            </button>
+        </form>
     </div>
-    
+
+    <!-- ADIÇÃO: Botão de Interrogação e Estrutura do Chat -->
+    <button class="btn-help" onclick="toggleChat()">?</button>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <span>Assistente IA</span>
+            <button class="chat-close" onclick="toggleChat()">X</button>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-message ai">Olá! Como posso ajudar você com o estoque hoje?</div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chatInput" placeholder="Digite sua dúvida..." onkeypress="verificarEnter(event)">
+            <button onclick="enviarMensagem()">Enviar</button>
+        </div>
+    </div>
 
 </body>
 
