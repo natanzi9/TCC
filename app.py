@@ -14,9 +14,9 @@ os.makedirs('static/uploads', exist_ok=True)  # Cria a pasta se não existir
 # ===== CONEXÃO COM O BANCO DE DADOS =====
 def banco():
     return mysql.connector.connect(
-        host="localhost",
+        host="db_almox",
         user="root",
-        password="",  # <--- Coloque a senha direta aqui para testar
+        password="root",  
         database="tcc"
     )
 
@@ -229,50 +229,6 @@ def api_criarconta():
         window.location.href = "/estoque"; // Redireciona para onde achar melhor
     </script>
     """
-
-
-# ===== ADICIONAR ITEM COM IMAGEM =====
-@app.route('/api/adicionarestoque', methods=['POST'])
-def api_post_estoque():
-    try:
-        dados = request.get_json()
-        
-        nome = dados.get('nome')
-        quantidade = dados.get('quantidade', 0)
-        preco = dados.get('preco', 0.0)
-        descricao = dados.get('descricao', '')
-        categoria = dados.get('categoria', '')
-        
-        if not nome:
-            return jsonify({
-                'sucesso': False,
-                'erro': 'O campo nome é obrigatório.'
-            }), 400
-
-        conexao = banco()
-        cursor = conexao.cursor()
-        
-        # Insere todos os campos na tabela estoque
-        sql = "INSERT INTO estoque (nome, quantidade, preco, descricao, categoria) VALUES (%s, %s, %s, %s, %s)"
-        valores = (nome, quantidade, preco, descricao, categoria)
-        
-        cursor.execute(sql, valores)
-        conexao.commit()
-        
-        novo_id = cursor.lastrowid
-        cursor.close()
-        conexao.close()
-        
-        return jsonify({
-            'sucesso': True,
-            'mensagem': 'Item cadastrado com sucesso!',
-            'id': novo_id
-        }), 201
-
-    except Exception as e:
-        print("ERRO AO CADASTRAR ITEM NO ESTOQUE:", e)
-        return jsonify({'sucesso': False, 'erro': str(e)}), 500
-
 
 # ===== BUSCAR ITEM POR ID (usado na tela de saídas) =====
 @app.route('/api/item/<int:id>')
@@ -565,37 +521,6 @@ def api_get_estoque():
         print("ERRO AO BUSCAR ESTOQUE:", e)
         return jsonify({'sucesso': False, 'erro': str(e)}), 500
 
-@app.route('/api/apagarestoque/<int:id_item>', methods=['DELETE'])
-def api_delete_estoque(id_item):
-    try:
-        conexao = banco()
-        cursor = conexao.cursor()
-        
-        sql = "DELETE FROM estoque WHERE id = %s"
-        
-        cursor.execute(sql, (id_item,))
-        conexao.commit()
-        
-        if cursor.rowcount == 0:
-            cursor.close()
-            conexao.close()
-            return jsonify({
-                'sucesso': False,
-                'erro': 'Item não encontrado com o ID informado.'
-            }), 404
-            
-        cursor.close()
-        conexao.close()
-        
-        return jsonify({
-            'sucesso': True,
-            'mensagem': f'Item com ID {id_item} deletado com sucesso!'
-        }), 200
-
-    except Exception as e:
-        print("ERRO AO DELETAR ITEM DO ESTOQUE:", e)
-        return jsonify({'sucesso': False, 'erro': str(e)}), 500
-
 @app.route('/api/mostraruser', methods=['GET'])
 def api_mostra_users():
     try:
@@ -745,4 +670,4 @@ def remover_usuario(id_usuario):
         }), 500
     
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5010, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
