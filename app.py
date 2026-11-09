@@ -499,6 +499,30 @@ def api_exportarcsv():
         </script>
         """
 
+@app.route('/api/saidas', methods=['GET'])
+def api_get_saidas():
+    """Retorna todas as saídas registradas (endpoint para o app mobile)."""
+    try:
+        conexao = banco()
+        cursor = conexao.cursor(dictionary=True)
+
+        cursor.execute(
+            "SELECT id, item, qtde, descricao, categoria, solicitante, almoxarife, "
+            "DATE_FORMAT(data, '%Y-%m-%d') AS data, devolucao, qtde_devolvida, status_devolucao "
+            "FROM saidas ORDER BY id DESC"
+        )
+        saidas = cursor.fetchall()
+
+        cursor.close()
+        conexao.close()
+
+        return jsonify({'sucesso': True, 'saidas': saidas}), 200
+
+    except Exception as e:
+        print("ERRO AO BUSCAR SAIDAS:", e)
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+
 @app.route('/api/estoque', methods=['GET'])
 def api_get_estoque():
     try:
