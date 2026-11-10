@@ -358,6 +358,29 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formApagarEstoque');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Apagar todo o estoque?',
+            text: 'Esta ação removerá todos os itens e não pode ser desfeita.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sim, apagar tudo',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#d33',
+            focusCancel: true
+        }).then((resultado) => {
+            if (resultado.isConfirmed) {
+                form.submit();
+            }
+        });
+    });
+});
 
 // ===== CHAT COM IA (VERSÃO UNIVERSAL BLINDADA) =====
 function toggleChat() {
