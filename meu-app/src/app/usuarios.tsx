@@ -1,5 +1,6 @@
 // ============================================================
-// usuarios.tsx — Gestão de usuários (somente ADM)
+// usuarios.tsx — Gestão de Usuários SGA SENAI (Somente ADM)
+// Estética idêntica ao criarconta.html / stylecc.css
 // ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
 import {
@@ -14,15 +15,13 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getUsuarios, criarUsuario, removerUsuario } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-
-const PURPLE = '#6A1B9A';
-const RED = '#C62828';
+import { SenaiColors } from '@/constants/theme';
+import { SenaiHeader } from '@/components/SenaiHeader';
 
 interface Usuario {
   id: number;
@@ -37,18 +36,16 @@ export default function UsuariosScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Modal criar
+  // Modal para Criar Novo Usuário
   const [criarModal, setCriarModal] = useState(false);
   const [novoUser, setNovoUser] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [criarLoading, setCriarLoading] = useState(false);
-  const [showSenha, setShowSenha] = useState(false);
 
-  // Redirecionar se não for ADM
   useEffect(() => {
     if (!isAdm) {
-      Alert.alert('Acesso negado', 'Esta tela é exclusiva para administradores.');
+      Alert.alert('Acesso Restrito', 'Esta funcionalidade é exclusiva para administradores.');
       router.replace('/home');
     }
   }, [isAdm]);
@@ -58,7 +55,7 @@ export default function UsuariosScreen() {
       const res = await getUsuarios();
       setUsuarios(res.usuarios ?? []);
     } catch {
-      Alert.alert('Erro', 'Não foi possível carregar os usuários.');
+      Alert.alert('Erro', 'Não foi possível carregar a lista de usuários.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -69,24 +66,24 @@ export default function UsuariosScreen() {
     carregar();
   }, [carregar]);
 
-  async function handleCriar() {
+  async function handleCriarUsuario() {
     if (!novoUser.trim()) {
-      Alert.alert('Atenção', 'Informe o nome de usuário.');
+      Alert.alert('Atenção', 'Informe o nome de usuário!');
       return;
     }
     if (novaSenha.length < 4) {
-      Alert.alert('Atenção', 'A senha deve ter ao menos 4 caracteres.');
+      Alert.alert('Atenção', 'A senha deve conter ao menos 4 caracteres.');
       return;
     }
     if (novaSenha !== confirmarSenha) {
-      Alert.alert('Atenção', 'As senhas não coincidem.');
+      Alert.alert('Atenção', 'As senhas não coincidem!');
       return;
     }
 
     setCriarLoading(true);
     try {
       await criarUsuario(novoUser.trim(), novaSenha);
-      Alert.alert('Sucesso', `Usuário "${novoUser}" criado!`);
+      Alert.alert('Sucesso!', `Usuário "${novoUser}" cadastrado com sucesso!`);
       setCriarModal(false);
       setNovoUser('');
       setNovaSenha('');
@@ -94,7 +91,7 @@ export default function UsuariosScreen() {
       carregar();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      Alert.alert('Erro', msg);
+      Alert.alert('Erro', `Falha ao cadastrar: ${msg}`);
     } finally {
       setCriarLoading(false);
     }
@@ -102,23 +99,25 @@ export default function UsuariosScreen() {
 
   function handleRemover(user: Usuario) {
     if (user.usuario === username) {
-      Alert.alert('Atenção', 'Você não pode remover sua própria conta.');
+      Alert.alert('Atenção', 'Você não pode remover seu próprio usuário logado!');
       return;
     }
     Alert.alert(
-      'Confirmar exclusão',
-      `Deseja remover o usuário "${user.usuario}"?`,
+      'Confirmar Exclusão',
+      `Deseja realmente excluir o usuário "${user.usuario}" (ID: ${user.id})?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Remover',
+          text: 'Excluir',
           style: 'destructive',
           onPress: async () => {
             try {
               await removerUsuario(user.id);
+              Alert.alert('Sucesso', 'Usuário removido com sucesso.');
               setUsuarios((prev) => prev.filter((u) => u.id !== user.id));
-            } catch {
-              Alert.alert('Erro', 'Falha ao remover usuário.');
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : String(err);
+              Alert.alert('Erro', `Falha ao remover usuário: ${msg}`);
             }
           },
         },
@@ -127,235 +126,343 @@ export default function UsuariosScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹ Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Usuários</Text>
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => setCriarModal(true)}
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <SenaiHeader
+        title="GESTÃO DE USUÁRIOS"
+        showBack={true}
+        rightAction={
+          <TouchableOpacity
+            style={styles.btnNovoUser}
+            onPress={() => setCriarModal(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.btnNovoUserText}>+ Criar</Text>
+          </TouchableOpacity>
+        }
+      />
+
+      <View style={styles.container}>
+        <View style={styles.quadrado}>
+          <Text style={styles.tituloSecao}>USUÁRIOS DO SISTEMA</Text>
+          <Text style={styles.subtituloSecao}>
+            Total cadastrado: {usuarios.length} {usuarios.length === 1 ? 'usuário' : 'usuários'}
+          </Text>
+
+          {loading ? (
+            <ActivityIndicator size="large" color={SenaiColors.orange} style={{ marginVertical: 36 }} />
+          ) : (
+            <FlatList
+              data={usuarios}
+              keyExtractor={(item) => String(item.id)}
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                carregar();
+              }}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item, index }) => {
+                const isCurrentUser = item.usuario === username;
+                return (
+                  <View style={[styles.userRow, index % 2 === 1 && styles.userRowAlt]}>
+                    <View style={styles.userAvatar}>
+                      <Text style={styles.userAvatarText}>👤</Text>
+                    </View>
+
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.userName}>{item.usuario}</Text>
+                      <Text style={styles.userId}>
+                        ID: {item.id} {isCurrentUser ? '• (Você logado)' : ''}
+                      </Text>
+                    </View>
+
+                    {!isCurrentUser && (
+                      <TouchableOpacity
+                        style={styles.btnExcluir}
+                        onPress={() => handleRemover(item)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.btnExcluirText}>Excluir</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              }}
+              ListEmptyComponent={
+                <View style={styles.emptyBox}>
+                  <Text style={styles.emptyText}>Nenhum usuário cadastrado.</Text>
+                </View>
+              }
+            />
+          )}
+
+          <TouchableOpacity
+            style={styles.btnCriarGrande}
+            onPress={() => setCriarModal(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.btnCriarGrandeText}>+ CRIAR NOVA CONTA</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Modal Criar Conta (idêntico ao criarconta.html) */}
+      <Modal visible={criarModal} transparent animationType="slide" onRequestClose={() => setCriarModal(false)}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <Text style={styles.addBtnText}>+ Novo</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Resumo */}
-      <View style={styles.summary}>
-        <Text style={styles.summaryText}>👥 {usuarios.length} usuário(s) cadastrado(s)</Text>
-      </View>
-
-      {/* Lista */}
-      {loading ? (
-        <ActivityIndicator color={PURPLE} size="large" style={{ marginTop: 48 }} />
-      ) : (
-        <FlatList
-          data={usuarios}
-          keyExtractor={(u) => String(u.id)}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-          onRefresh={() => { setRefreshing(true); carregar(); }}
-          refreshing={refreshing}
-          renderItem={({ item }) => (
-            <View style={styles.userRow}>
-              <View style={styles.userAvatar}>
-                <Text style={styles.userAvatarText}>{item.usuario.charAt(0).toUpperCase()}</Text>
-              </View>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{item.usuario}</Text>
-                <Text style={styles.userId}>ID #{item.id}</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.removeBtn}
-                onPress={() => handleRemover(item)}
-              >
-                <Text style={styles.removeBtnText}>Remover</Text>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHead}>
+              <Text style={styles.modalTitle}>CRIAR CONTA</Text>
+              <TouchableOpacity onPress={() => setCriarModal(false)} style={styles.modalClose}>
+                <Text style={styles.modalCloseText}>✕</Text>
               </TouchableOpacity>
             </View>
-          )}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>Nenhum usuário cadastrado.</Text>
-            </View>
-          }
-        />
-      )}
 
-      {/* Modal Criar Usuário */}
-      <Modal visible={criarModal} transparent animationType="slide" onRequestClose={() => setCriarModal(false)}>
-        <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={styles.modalCard}>
-              <View style={styles.modalHeaderRow}>
-                <Text style={styles.modalTitle}>Novo Usuário</Text>
-                <TouchableOpacity onPress={() => setCriarModal(false)}>
-                  <Text style={styles.modalClose}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.inputLabel}>Usuário *</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <strong>Usuário:</strong>
+              </Text>
               <TextInput
                 style={styles.input}
+                placeholder="Digite o login do usuário"
+                placeholderTextColor="#94A3B8"
                 value={novoUser}
                 onChangeText={setNovoUser}
-                placeholder="Nome de usuário"
-                placeholderTextColor="#999"
                 autoCapitalize="none"
-                autoCorrect={false}
               />
+            </View>
 
-              <Text style={styles.inputLabel}>Senha *</Text>
-              <View style={styles.senhaRow}>
-                <TextInput
-                  style={[styles.input, { flex: 1 }]}
-                  value={novaSenha}
-                  onChangeText={setNovaSenha}
-                  placeholder="Mínimo 4 caracteres"
-                  placeholderTextColor="#999"
-                  secureTextEntry={!showSenha}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity onPress={() => setShowSenha(!showSenha)} style={styles.eyeBtn}>
-                  <Text style={styles.eyeText}>{showSenha ? '🙈' : '👁'}</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.inputLabel}>Confirmar Senha *</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <strong>Senha:</strong>
+              </Text>
               <TextInput
                 style={styles.input}
+                placeholder="Digite a senha"
+                placeholderTextColor="#94A3B8"
+                secureTextEntry
+                value={novaSenha}
+                onChangeText={setNovaSenha}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <strong>CONFIRMAR SENHA:</strong>
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirme a senha"
+                placeholderTextColor="#94A3B8"
+                secureTextEntry
                 value={confirmarSenha}
                 onChangeText={setConfirmarSenha}
-                placeholder="Repita a senha"
-                placeholderTextColor="#999"
-                secureTextEntry={!showSenha}
-                autoCapitalize="none"
               />
-
-              <TouchableOpacity
-                style={[styles.createBtn, criarLoading && { opacity: 0.6 }]}
-                onPress={handleCriar}
-                disabled={criarLoading}
-              >
-                {criarLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.createBtnText}>✓ Criar Usuário</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setCriarModal(false)}>
-                <Text style={styles.cancelBtnText}>Cancelar</Text>
-              </TouchableOpacity>
             </View>
-          </KeyboardAvoidingView>
-        </View>
+
+            <TouchableOpacity
+              style={[styles.btnCriarConfirmar, criarLoading && { opacity: 0.6 }]}
+              onPress={handleCriarUsuario}
+              disabled={criarLoading}
+              activeOpacity={0.85}
+            >
+              {criarLoading ? (
+                <ActivityIndicator color={SenaiColors.darkBlue} />
+              ) : (
+                <Text style={styles.btnCriarConfirmarText}>CRIAR CONTA</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F0F4F8' },
-
-  header: {
-    backgroundColor: PURPLE,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
+  safe: {
+    flex: 1,
+    backgroundColor: SenaiColors.pageBg,
   },
-  backBtn: { width: 60 },
-  backText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  headerTitle: { flex: 1, color: '#fff', fontSize: 20, fontWeight: '700', textAlign: 'center' },
-  addBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    width: 60,
-    alignItems: 'center',
+  container: {
+    flex: 1,
+    padding: 12,
   },
-  addBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-
-  summary: { padding: 16, paddingBottom: 8 },
-  summaryText: { fontSize: 14, color: '#666', fontWeight: '500' },
-
-  userRow: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  userAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: PURPLE,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  userAvatarText: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  userInfo: { flex: 1 },
-  userName: { fontSize: 15, fontWeight: '600', color: '#222' },
-  userId: { fontSize: 12, color: '#AAA', marginTop: 2 },
-  removeBtn: {
-    backgroundColor: '#FFEBEE',
+  btnNovoUser: {
+    backgroundColor: SenaiColors.orange,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-  removeBtnText: { color: RED, fontWeight: '700', fontSize: 13 },
-
-  empty: { alignItems: 'center', paddingTop: 48 },
-  emptyText: { color: '#AAA', fontSize: 15 },
-
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
+  btnNovoUserText: {
+    color: SenaiColors.darkBlue,
+    fontWeight: '800',
+    fontSize: 12,
   },
-  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A2E' },
-  modalClose: { fontSize: 20, color: '#888', padding: 4 },
-
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6, marginTop: 12 },
-  input: {
-    borderWidth: 1.5,
-    borderColor: '#DDD',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#222',
-    backgroundColor: '#FAFAFA',
-  },
-  senhaRow: { flexDirection: 'row', alignItems: 'center' },
-  eyeBtn: { paddingHorizontal: 10, paddingVertical: 12 },
-  eyeText: { fontSize: 18 },
-
-  createBtn: {
-    marginTop: 20,
-    backgroundColor: PURPLE,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    shadowColor: PURPLE,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+  quadrado: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: SenaiColors.cardRadius,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
     elevation: 4,
   },
-  createBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  cancelBtn: { marginTop: 10, alignItems: 'center', paddingVertical: 10, marginBottom: 8 },
-  cancelBtnText: { color: '#888', fontSize: 14 },
+  tituloSecao: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: SenaiColors.secondary,
+    textAlign: 'center',
+  },
+  subtituloSecao: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 16,
+    marginTop: 2,
+  },
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 8,
+  },
+  userRowAlt: {
+    backgroundColor: '#F8FAFC',
+  },
+  userAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userAvatarText: {
+    fontSize: 18,
+  },
+  userName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: SenaiColors.textDark,
+  },
+  userId: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  btnExcluir: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  btnExcluirText: {
+    color: SenaiColors.danger,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  btnCriarGrande: {
+    backgroundColor: SenaiColors.orange,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 14,
+    shadowColor: SenaiColors.orange,
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  btnCriarGrandeText: {
+    color: SenaiColors.darkBlue,
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  emptyBox: {
+    padding: 36,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#94A3B8',
+    fontSize: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: SenaiColors.cardRadius,
+    padding: 22,
+    width: '100%',
+    maxWidth: 400,
+    elevation: 8,
+  },
+  modalHead: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: SenaiColors.primary,
+  },
+  modalClose: {
+    padding: 4,
+  },
+  modalCloseText: {
+    fontSize: 18,
+    color: '#94A3B8',
+    fontWeight: 'bold',
+  },
+  inputGroup: {
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: SenaiColors.primary,
+    marginBottom: 4,
+  },
+  input: {
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    backgroundColor: '#F8FAFC',
+    color: SenaiColors.textDark,
+  },
+  btnCriarConfirmar: {
+    backgroundColor: SenaiColors.orange,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 14,
+  },
+  btnCriarConfirmarText: {
+    color: SenaiColors.darkBlue,
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
 });

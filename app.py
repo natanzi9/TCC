@@ -10,6 +10,23 @@ app.secret_key = "senha_super_secreta"  # Chave para criptografar a sessão do u
 app.config['UPLOAD_FOLDER'] = 'static/uploads'  # Pasta onde as imagens são salvas
 os.makedirs('static/uploads', exist_ok=True)  # Cria a pasta se não existir
 
+# ===== SUPORTE CORS PARA O APP MOBILE (EXPO) =====
+@app.before_request
+def handle_options():
+    if request.method == 'OPTIONS':
+        response = app.make_default_options_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        return response
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    return response
+
 
 # ===== CONEXÃO COM O BANCO DE DADOS =====
 def banco():
@@ -305,6 +322,37 @@ def api_item_completo(id):
 # ===== ALTERAR ITEM =====
 @app.route('/api/alteraritem/<int:id>', methods=['POST'])
 def alteraritem(id):
+    if request.is_json:
+        dados = request.get_json() or {}
+        nome          = dados.get('nome')
+        categoria     = dados.get('categoria', '')
+        descricao     = dados.get('descricao', '')
+        preco         = dados.get('preco', 0)
+        quantidade    = dados.get('quantidade', 0)
+        estoqueminimo = dados.get('estoqueminimo', dados.get('estoque_min', 0))
+        imagem        = dados.get('imagem')
+
+        conexao = banco()
+        cursor = conexao.cursor()
+        if imagem:
+            cursor.execute(
+                """UPDATE estoque SET nome=%s, categoria=%s, descricao=%s,
+                   preco=%s, quantidade=%s, estoque_min=%s, imagem=%s
+                   WHERE id=%s""",
+                (nome, categoria, descricao, preco, quantidade, estoqueminimo, imagem, id)
+            )
+        else:
+            cursor.execute(
+                """UPDATE estoque SET nome=%s, categoria=%s, descricao=%s,
+                   preco=%s, quantidade=%s, estoque_min=%s
+                   WHERE id=%s""",
+                (nome, categoria, descricao, preco, quantidade, estoqueminimo, id)
+            )
+        conexao.commit()
+        cursor.close()
+        conexao.close()
+        return jsonify({'sucesso': True, 'mensagem': 'Item alterado com sucesso!'}), 200
+
     nome          = request.form['nome']
     categoria     = request.form['categoria']
     descricao     = request.form['descricao']
@@ -574,14 +622,15 @@ from flask import Flask, request, jsonify
 @app.route('/api/adicionarestoque', methods=['POST'])
 def api_post_estoque():
     try:
-        # Pega os dados JSON enviados na requisição
-        dados = request.get_json()
+        dados = request.get_json() or {}
         
-        # Valida se os campos necessários foram enviados 
-        # (Ajuste os nomes dos campos conforme as colunas da sua tabela 'estoque')
         nome = dados.get('nome')
         quantidade = dados.get('quantidade')
         preco = dados.get('preco')
+        categoria = dados.get('categoria', '')
+        descricao = dados.get('descricao', '')
+        estoque_min = dados.get('estoque_min', dados.get('estoqueminimo', 0))
+        imagem = dados.get('imagem')
         
         if not nome or quantidade is None or preco is None:
             return jsonify({
@@ -592,14 +641,12 @@ def api_post_estoque():
         conexao = banco()
         cursor = conexao.cursor()
         
-        # Comando SQL para inserir o novo item
-        sql = "INSERT INTO estoque (nome, quantidade, preco) VALUES (%s, %s, %s)"
-        valores = (nome, quantidade, preco)
+        sql = """INSERT INTO estoque (nome, categoria, descricao, preco, quantidade, estoque_min, imagem)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        valores = (nome, categoria, descricao, preco, quantidade, estoque_min, imagem)
         
         cursor.execute(sql, valores)
-        conexao.commit() # Salva as alterações no banco de dados
-        
-        # Pega o ID gerado para o novo item inserido
+        conexao.commit()
         novo_id = cursor.lastrowid
         
         cursor.close()
@@ -615,10 +662,32 @@ def api_post_estoque():
         print("ERRO AO CADASTRAR ITEM NO ESTOQUE:", e)
         return jsonify({'sucesso': False, 'erro': str(e)}), 500
 
+@app.route('/api/removeritem/<int:id_item>', methods=['DELETE'])
+def remover_item(id_item):
+    try:
+        conexao = banco()
+        cursor = conexao.cursor()
+
+        cursor.execute("DELETE FROM estoque WHERE id = %s", (id_item,))
+        if cursor.rowcount == 0:
+            cursor.close()
+            conexao.close()
+            return jsonify({'sucesso': False, 'erro': 'Item não encontrado.'}), 404
+
+        conexao.commit()
+        cursor.close()
+        conexao.close()
+
+        return jsonify({'sucesso': True, 'mensagem': f'Item {id_item} removido com sucesso!'}), 200
+
+    except Exception as e:
+        print("ERRO AO REMOVER ITEM:", e)
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
 @app.route('/api/adicionaruser', methods=['POST'])
 def api_post_user():
     try:
-        dados = request.get_json()
+        dados = request.get_json() or {}
 
         usuario = dados.get('usuario')
         senha = dados.get('senha')
@@ -630,17 +699,26 @@ def api_post_user():
             }), 400
 
         conexao = banco()
-        cursor = conexao.cursor()
+        cursor = conexao.cursor(dictionary=True)
 
-        sql ="INSERT INTO usuario (usuario, senha) VALUES (%s, %s)"
+        cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (usuario,))
+        if cursor.fetchone():
+            cursor.close()
+            conexao.close()
+            return jsonify({
+                'sucesso': False,
+                'erro': 'Usuário já cadastrado!'
+            }), 400
 
-        valores = (usuario, senha)
+        hash_senha = bcrypt.hashpw(str(senha).encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-        cursor.execute(sql, valores)
+        cursor2 = conexao.cursor()
+        sql = "INSERT INTO usuario (usuario, senha) VALUES (%s, %s)"
+        cursor2.execute(sql, (usuario, hash_senha))
         conexao.commit()
 
-        novo_id = cursor.lastrowid
-
+        novo_id = cursor2.lastrowid
+        cursor2.close()
         cursor.close()
         conexao.close()
 

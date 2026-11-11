@@ -1,5 +1,6 @@
 // ============================================================
-// saidas.tsx — Histórico de saídas e devoluções
+// saidas.tsx — Histórico de Saídas e Controle de Devoluções SGA SENAI
+// Estética idêntica ao saidas.html / stylesaida.css
 // ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
 import {
@@ -12,113 +13,35 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getEstoque, registrarDevolucao, EstoqueItem, Saida, API_BASE } from '@/services/api';
-
-const BLUE = '#1565C0';
-const ORANGE = '#E65100';
-const GREEN = '#2E7D32';
-const RED = '#C62828';
-const PURPLE = '#6A1B9A';
-
-function statusDevolucaoColor(status?: string): string {
-  if (status === 'total') return GREEN;
-  if (status === 'parcial') return ORANGE;
-  return '#AAA';
-}
-
-function statusDevolucaoLabel(status?: string | null, devolucao?: string): string {
-  if (devolucao === 'Não') return 'Sem devolução';
-  if (status === 'total') return '✅ Total';
-  if (status === 'parcial') return '🔄 Parcial';
-  return '⏳ Pendente';
-}
-
-function SaidaCard({ saida, onDevolucao }: { saida: Saida; onDevolucao: (s: Saida) => void }) {
-  const color = statusDevolucaoColor(saida.status_devolucao ?? undefined);
-  return (
-    <View style={styles.saidaCard}>
-      <View style={styles.saidaCardTop}>
-        <View style={styles.saidaIconBox}>
-          <Text style={styles.saidaIcon}>📤</Text>
-        </View>
-        <View style={styles.saidaInfo}>
-          <Text style={styles.saidaNome} numberOfLines={1}>{saida.item}</Text>
-          <Text style={styles.saidaSub}>
-            Qtde: <Text style={styles.bold}>{saida.qtde}</Text>  •  {saida.data ?? 'Sem data'}
-          </Text>
-          {saida.solicitante && (
-            <Text style={styles.saidaSub}>Solicitante: {saida.solicitante}</Text>
-          )}
-        </View>
-        <View style={[styles.devBadge, { backgroundColor: color + '22', borderColor: color }]}>
-          <Text style={[styles.devBadgeText, { color }]}>
-            {statusDevolucaoLabel(saida.status_devolucao, saida.devolucao)}
-          </Text>
-        </View>
-      </View>
-
-      {saida.descricao && (
-        <Text style={styles.saidaDesc} numberOfLines={1}>📝 {saida.descricao}</Text>
-      )}
-
-      {saida.devolucao === 'Sim' && saida.status_devolucao !== 'total' && (
-        <TouchableOpacity style={styles.devBtn} onPress={() => onDevolucao(saida)}>
-          <Text style={styles.devBtnText}>Registrar Devolução</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-}
+import { getSaidas, registrarDevolucao, Saida } from '@/services/api';
+import { SenaiColors } from '@/constants/theme';
+import { SenaiHeader } from '@/components/SenaiHeader';
 
 export default function SaidasScreen() {
   const router = useRouter();
 
   const [saidas, setSaidas] = useState<Saida[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState('');
+  const [filtro, setFiltro] = useState<'todas' | 'pendentes' | 'devolvidas'>('todas');
 
-  // Modal de devolução
+  // Modal para Devolução
   const [devModal, setDevModal] = useState(false);
   const [devSaida, setDevSaida] = useState<Saida | null>(null);
-  const [devQtde, setDevQtde] = useState('');
+  const [devQtde, setDevQtde] = useState('1');
   const [devStatus, setDevStatus] = useState<'parcial' | 'total'>('total');
   const [devLoading, setDevLoading] = useState(false);
 
-  const carregar = useCallback(async () => {
-    try {
-      // Reutilizamos a rota /home para pegar saídas via endpoint dedicado
-      const res = await fetch(`${API_BASE}/home`);
-      // O backend retorna HTML. Precisamos usar o endpoint de saídas da API
-      // Como o backend não tem GET /api/saidas, fazemos via endpoint de home parseado
-      // Alternativa: vamos usar um endpoint auxiliar que adicionamos
-      // Por ora, buscamos via endpoint não padronizado — retornamos vazio e mostramos aviso
-      setSaidas([]);
-    } catch {
-      // Silencia
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  // Tenta buscar saídas por endpoint customizado
   const carregarSaidas = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/saidas`);
-      if (res.ok) {
-        const json: { saidas: Saida[] } = await res.json();
-        setSaidas(json.saidas ?? []);
-      } else {
-        // Endpoint não existe ainda — indica ao usuário
-        setSaidas([]);
-      }
+      const data = await getSaidas();
+      setSaidas(data);
     } catch {
-      setSaidas([]);
+      Alert.alert('Erro', 'Não foi possível carregar as saídas do servidor.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -129,16 +52,28 @@ export default function SaidasScreen() {
     carregarSaidas();
   }, [carregarSaidas]);
 
-  const filtradas = saidas.filter(
-    (s) =>
+  const filtradas = saidas.filter((s) => {
+    const matchSearch =
       s.item.toLowerCase().includes(search.toLowerCase()) ||
-      (s.solicitante ?? '').toLowerCase().includes(search.toLowerCase()),
-  );
+      (s.solicitante ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (s.almoxarife ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (s.descricao ?? '').toLowerCase().includes(search.toLowerCase());
 
-  function abrirDevolucao(saida: Saida) {
+    if (!matchSearch) return false;
+
+    if (filtro === 'pendentes') {
+      return s.devolucao === 'Sim' && s.status_devolucao !== 'total';
+    }
+    if (filtro === 'devolvidas') {
+      return s.status_devolucao === 'total' || s.status_devolucao === 'parcial';
+    }
+    return true;
+  });
+
+  function abrirModalDevolucao(saida: Saida, tipo: 'parcial' | 'total' = 'total') {
     setDevSaida(saida);
-    setDevQtde(String(saida.qtde));
-    setDevStatus('total');
+    setDevStatus(tipo);
+    setDevQtde(tipo === 'total' ? String(saida.qtde) : '1');
     setDevModal(true);
   }
 
@@ -146,9 +81,14 @@ export default function SaidasScreen() {
     if (!devSaida) return;
     const qtde = parseInt(devQtde, 10);
     if (isNaN(qtde) || qtde <= 0) {
-      Alert.alert('Atenção', 'Informe uma quantidade válida.');
+      Alert.alert('Atenção', 'Informe uma quantidade válida!');
       return;
     }
+    if (qtde > devSaida.qtde) {
+      Alert.alert('Atenção', `A quantidade não pode exceder o total da saída (${devSaida.qtde}).`);
+      return;
+    }
+
     setDevLoading(true);
     try {
       await registrarDevolucao({
@@ -157,132 +97,255 @@ export default function SaidasScreen() {
         status: devStatus,
         saida_id: devSaida.id,
       });
-      Alert.alert('Sucesso', 'Devolução registrada!');
+      Alert.alert('Sucesso', 'Devolução registrada no estoque com sucesso!');
       setDevModal(false);
       carregarSaidas();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      Alert.alert('Erro', msg);
+      Alert.alert('Erro', `Falha ao registrar devolução: ${msg}`);
     } finally {
       setDevLoading(false);
     }
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹ Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Saídas</Text>
-        <TouchableOpacity onPress={() => router.push('/registrar-saida')} style={styles.addBtn}>
-          <Text style={styles.addText}>+ Nova</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Busca */}
-      <View style={styles.searchBox}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar item ou solicitante..."
-          placeholderTextColor="#999"
-          value={search}
-          onChangeText={setSearch}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <Text style={styles.clearSearch}>✕</Text>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <SenaiHeader
+        title="SAÍDAS DE INSUMOS"
+        showBack={true}
+        rightAction={
+          <TouchableOpacity
+            style={styles.btnNova}
+            onPress={() => router.push('/registrar-saida')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.btnNovaText}>+ Nova</Text>
           </TouchableOpacity>
-        )}
-      </View>
+        }
+      />
 
-      {/* Info */}
-      <View style={styles.infoBar}>
-        <Text style={styles.infoText}>{filtradas.length} saídas registradas</Text>
-        <TouchableOpacity onPress={() => { setRefreshing(true); carregarSaidas(); }}>
-          <Text style={styles.refreshBtn}>🔄 Atualizar</Text>
-        </TouchableOpacity>
-      </View>
+      <View style={styles.container}>
+        <View style={styles.quadrado}>
+          {/* Busca */}
+          <View style={styles.searchBox}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar por item, solicitante ou finalidade..."
+              placeholderTextColor="#94A3B8"
+              value={search}
+              onChangeText={setSearch}
+            />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => setSearch('')}>
+                <Text style={styles.clearSearch}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-      {loading ? (
-        <ActivityIndicator color={BLUE} size="large" style={{ marginTop: 48 }} />
-      ) : saidas.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>📭</Text>
-          <Text style={styles.emptyTitle}>Nenhuma saída registrada</Text>
-          <Text style={styles.emptyDesc}>
-            O endpoint /api/saidas precisa ser adicionado ao backend Flask para listar saídas aqui.
-          </Text>
-          <TouchableOpacity style={styles.newSaidaBtn} onPress={() => router.push('/registrar-saida')}>
-            <Text style={styles.newSaidaBtnText}>Registrar Nova Saída</Text>
-          </TouchableOpacity>
+          {/* Filtros em Abas */}
+          <View style={styles.filtrosRow}>
+            <TouchableOpacity
+              style={[styles.filtroBtn, filtro === 'todas' && styles.filtroBtnActive]}
+              onPress={() => setFiltro('todas')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.filtroText, filtro === 'todas' && styles.filtroTextActive]}>
+                Todas ({saidas.length})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filtroBtn, filtro === 'pendentes' && styles.filtroBtnActive]}
+              onPress={() => setFiltro('pendentes')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.filtroText, filtro === 'pendentes' && styles.filtroTextActive]}>
+                ⏳ Pendentes ({saidas.filter((s) => s.devolucao === 'Sim' && s.status_devolucao !== 'total').length})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filtroBtn, filtro === 'devolvidas' && styles.filtroBtnActive]}
+              onPress={() => setFiltro('devolvidas')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.filtroText, filtro === 'devolvidas' && styles.filtroTextActive]}>
+                ✅ Devolvidas
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Lista de Saídas */}
+          {loading ? (
+            <ActivityIndicator size="large" color={SenaiColors.orange} style={{ marginVertical: 36 }} />
+          ) : (
+            <FlatList
+              data={filtradas}
+              keyExtractor={(item) => String(item.id)}
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                carregarSaidas();
+              }}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => {
+                const isParcial = item.status_devolucao === 'parcial';
+                const isTotal = item.status_devolucao === 'total';
+                const hasDev = item.devolucao === 'Sim';
+                const pendente = hasDev && !isTotal;
+
+                return (
+                  <View style={styles.cardSaida}>
+                    <View style={styles.cardSaidaHead}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.saidaItemNome} numberOfLines={1}>
+                          {item.item}
+                        </Text>
+                        <Text style={styles.saidaSub}>
+                          Qtde: <Text style={{ fontWeight: 'bold', color: SenaiColors.textDark }}>{item.qtde} un.</Text> • Data: {item.data ?? 'Sem data'}
+                        </Text>
+                      </View>
+
+                      {/* Badge de status */}
+                      <View style={styles.statusBadgeContainer}>
+                        {isTotal ? (
+                          <View style={[styles.statusBadge, { backgroundColor: '#EFF6FF', borderColor: SenaiColors.primary }]}>
+                            <Text style={[styles.statusBadgeText, { color: SenaiColors.primary }]}>✅ Total</Text>
+                          </View>
+                        ) : isParcial ? (
+                          <View style={[styles.statusBadge, { backgroundColor: '#FFF7ED', borderColor: SenaiColors.orange }]}>
+                            <Text style={[styles.statusBadgeText, { color: SenaiColors.orange }]}>
+                              🔄 Parcial ({item.qtde_devolvida})
+                            </Text>
+                          </View>
+                        ) : pendente ? (
+                          <View style={[styles.statusBadge, { backgroundColor: '#FEF3C7', borderColor: '#D97706' }]}>
+                            <Text style={[styles.statusBadgeText, { color: '#D97706' }]}>⏳ Pendente</Text>
+                          </View>
+                        ) : (
+                          <View style={[styles.statusBadge, { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }]}>
+                            <Text style={[styles.statusBadgeText, { color: '#64748B' }]}>Sem Devolução</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+
+                    <View style={styles.cardSaidaInfoRow}>
+                      <Text style={styles.infoLabel}>Solicitante: <Text style={styles.infoVal}>{item.solicitante || '—'}</Text></Text>
+                      <Text style={styles.infoLabel}>Almoxarife: <Text style={styles.infoVal}>{item.almoxarife || '—'}</Text></Text>
+                    </View>
+
+                    {item.descricao ? (
+                      <Text style={styles.descText} numberOfLines={2}>
+                        📝 Finalidade: {item.descricao}
+                      </Text>
+                    ) : null}
+
+                    {/* Botões de devolução direta caso pendente */}
+                    {pendente && (
+                      <View style={styles.devolucaoActionsRow}>
+                        <TouchableOpacity
+                          style={[styles.btnDevOption, { backgroundColor: SenaiColors.orange }]}
+                          onPress={() => abrirModalDevolucao(item, 'parcial')}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.btnDevOptionText}>Devolução Parcial</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[styles.btnDevOption, { backgroundColor: SenaiColors.primary }]}
+                          onPress={() => abrirModalDevolucao(item, 'total')}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={[styles.btnDevOptionText, { color: '#FFFFFF' }]}>Devolução Total</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                );
+              }}
+              ListEmptyComponent={
+                <View style={styles.emptyBox}>
+                  <Text style={styles.emptyText}>Nenhuma saída encontrada.</Text>
+                </View>
+              }
+            />
+          )}
         </View>
-      ) : (
-        <FlatList
-          data={filtradas}
-          keyExtractor={(s) => String(s.id)}
-          renderItem={({ item }) => <SaidaCard saida={item} onDevolucao={abrirDevolucao} />}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
-          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-          onRefresh={() => { setRefreshing(true); carregarSaidas(); }}
-          refreshing={refreshing}
-        />
-      )}
+      </View>
 
       {/* Modal Devolução */}
       <Modal visible={devModal} transparent animationType="slide" onRequestClose={() => setDevModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Registrar Devolução</Text>
-            <Text style={styles.modalItem}>Item: <Text style={styles.bold}>{devSaida?.item}</Text></Text>
-            <Text style={styles.modalItem}>Qtde saída: <Text style={styles.bold}>{devSaida?.qtde}</Text></Text>
+            <View style={styles.modalHead}>
+              <Text style={styles.modalTitle}>Registrar Devolução</Text>
+              <TouchableOpacity onPress={() => setDevModal(false)} style={styles.modalClose}>
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
 
-            <Text style={styles.inputLabel}>Quantidade devolvida</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              value={devQtde}
-              onChangeText={setDevQtde}
-              placeholder="Ex: 2"
-              placeholderTextColor="#999"
-            />
+            <Text style={{ fontSize: 14, color: '#334155', marginBottom: 6 }}>
+              Item: <Text style={{ fontWeight: 'bold' }}>{devSaida?.item}</Text>
+            </Text>
+            <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 12 }}>
+              Quantidade retirada: {devSaida?.qtde} unidades
+            </Text>
 
-            <Text style={styles.inputLabel}>Tipo de devolução</Text>
-            <View style={styles.statusRow}>
+            <Text style={styles.inputLabel}>Tipo de Devolução:</Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
               <TouchableOpacity
-                style={[styles.statusBtn, devStatus === 'total' && styles.statusBtnActive]}
-                onPress={() => setDevStatus('total')}
+                style={[styles.tipoBtn, devStatus === 'total' && styles.tipoBtnActive]}
+                onPress={() => {
+                  setDevStatus('total');
+                  setDevQtde(String(devSaida?.qtde ?? 1));
+                }}
               >
-                <Text style={[styles.statusBtnText, devStatus === 'total' && styles.statusBtnTextActive]}>
-                  ✅ Total
+                <Text style={[styles.tipoBtnText, devStatus === 'total' && styles.tipoBtnTextActive]}>
+                  Total ({devSaida?.qtde} un.)
                 </Text>
               </TouchableOpacity>
+
               <TouchableOpacity
-                style={[styles.statusBtn, devStatus === 'parcial' && styles.statusBtnActive]}
+                style={[styles.tipoBtn, devStatus === 'parcial' && styles.tipoBtnActive]}
                 onPress={() => setDevStatus('parcial')}
               >
-                <Text style={[styles.statusBtnText, devStatus === 'parcial' && styles.statusBtnTextActive]}>
-                  🔄 Parcial
+                <Text style={[styles.tipoBtnText, devStatus === 'parcial' && styles.tipoBtnTextActive]}>
+                  Parcial
                 </Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={[styles.confirmBtn, devLoading && { opacity: 0.6 }]}
-              onPress={confirmarDevolucao}
-              disabled={devLoading}
-            >
-              {devLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.confirmBtnText}>Confirmar Devolução</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setDevModal(false)} style={styles.cancelBtn}>
-              <Text style={styles.cancelBtnText}>Cancelar</Text>
-            </TouchableOpacity>
+            <Text style={styles.inputLabel}>Quantidade devolvida:</Text>
+            <TextInput
+              style={styles.modalInput}
+              keyboardType="numeric"
+              value={devQtde}
+              onChangeText={setDevQtde}
+              placeholder="Ex: 2"
+            />
+
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
+              <TouchableOpacity
+                style={[styles.actionBtnModal, { backgroundColor: '#CBD5E1' }]}
+                onPress={() => setDevModal(false)}
+              >
+                <Text style={{ fontWeight: '700', color: '#334155' }}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionBtnModal, { backgroundColor: SenaiColors.orange, flex: 1.5 }]}
+                onPress={confirmarDevolucao}
+                disabled={devLoading}
+              >
+                {devLoading ? (
+                  <ActivityIndicator color={SenaiColors.darkBlue} />
+                ) : (
+                  <Text style={{ fontWeight: '800', color: SenaiColors.darkBlue }}>CONFIRMAR</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -291,154 +354,254 @@ export default function SaidasScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F0F4F8' },
-
-  header: {
-    backgroundColor: ORANGE,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
+  safe: {
+    flex: 1,
+    backgroundColor: SenaiColors.pageBg,
   },
-  backBtn: { marginRight: 8 },
-  backText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  headerTitle: { flex: 1, color: '#fff', fontSize: 20, fontWeight: '700', textAlign: 'center' },
-  addBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
+  container: {
+    flex: 1,
+    padding: 12,
+  },
+  btnNova: {
+    backgroundColor: SenaiColors.orange,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 14,
+    borderRadius: 20,
   },
-  addText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-
+  btnNovaText: {
+    color: SenaiColors.darkBlue,
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  quadrado: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: SenaiColors.cardRadius,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
+  },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    margin: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    paddingHorizontal: 10,
+    marginBottom: 10,
   },
-  searchIcon: { fontSize: 16, marginRight: 8 },
-  searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: '#222' },
-  clearSearch: { fontSize: 16, color: '#999', paddingLeft: 8 },
-
-  infoBar: {
+  searchIcon: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: SenaiColors.textDark,
+  },
+  clearSearch: {
+    color: '#94A3B8',
+    fontSize: 16,
+    fontWeight: 'bold',
+    padding: 6,
+  },
+  filtrosRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 12,
+  },
+  filtroBtn: {
+    flex: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  filtroBtnActive: {
+    backgroundColor: SenaiColors.primary,
+    borderColor: SenaiColors.primary,
+  },
+  filtroText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: SenaiColors.secondary,
+  },
+  filtroTextActive: {
+    color: '#FFFFFF',
+  },
+  cardSaida: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderLeftWidth: 4,
+    borderLeftColor: SenaiColors.primary,
+  },
+  cardSaidaHead: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  saidaItemNome: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: SenaiColors.primary,
+  },
+  saidaSub: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  statusBadgeContainer: {
+    marginLeft: 8,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  cardSaidaInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#EEF2F6',
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: '#64748B',
+  },
+  infoVal: {
+    fontWeight: '700',
+    color: SenaiColors.textDark,
+  },
+  descText: {
+    fontSize: 12,
+    color: '#475569',
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
+  devolucaoActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  btnDevOption: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  btnDevOptionText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: SenaiColors.darkBlue,
+  },
+  emptyBox: {
+    padding: 36,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#94A3B8',
+    fontSize: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 380,
+    elevation: 6,
+  },
+  modalHead: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 8,
+    marginBottom: 12,
   },
-  infoText: { fontSize: 13, color: '#666', fontWeight: '500' },
-  refreshBtn: { fontSize: 13, color: BLUE, fontWeight: '600' },
-
-  saidaCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: SenaiColors.primary,
   },
-  saidaCardTop: { flexDirection: 'row', alignItems: 'flex-start' },
-  saidaIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    backgroundColor: '#FFF3E0',
+  modalClose: {
+    padding: 4,
+  },
+  modalCloseText: {
+    fontSize: 18,
+    color: '#94A3B8',
+    fontWeight: 'bold',
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 6,
+  },
+  tipoBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  tipoBtnActive: {
+    backgroundColor: '#E0F2FE',
+    borderColor: SenaiColors.primary,
+  },
+  tipoBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  tipoBtnTextActive: {
+    color: SenaiColors.primary,
+  },
+  modalInput: {
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    backgroundColor: '#F8FAFC',
+  },
+  actionBtnModal: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
   },
-  saidaIcon: { fontSize: 20 },
-  saidaInfo: { flex: 1 },
-  saidaNome: { fontSize: 15, fontWeight: '700', color: '#222' },
-  saidaSub: { fontSize: 12, color: '#888', marginTop: 2 },
-  bold: { fontWeight: '700', color: '#333' },
-  devBadge: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    alignSelf: 'flex-start',
-    marginLeft: 4,
-  },
-  devBadgeText: { fontSize: 11, fontWeight: '700' },
-  saidaDesc: { fontSize: 12, color: '#777', marginTop: 8, fontStyle: 'italic' },
-  devBtn: {
-    marginTop: 10,
-    backgroundColor: PURPLE + '15',
-    borderColor: PURPLE,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  devBtnText: { color: PURPLE, fontWeight: '700', fontSize: 13 },
-
-  emptyState: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
-  emptyEmoji: { fontSize: 56 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#555', marginTop: 16 },
-  emptyDesc: { fontSize: 13, color: '#888', textAlign: 'center', marginTop: 10, lineHeight: 20 },
-  newSaidaBtn: {
-    marginTop: 24,
-    backgroundColor: ORANGE,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
-  newSaidaBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-  },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A2E', marginBottom: 12 },
-  modalItem: { fontSize: 14, color: '#555', marginBottom: 4 },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#555', marginTop: 16, marginBottom: 6 },
-  input: {
-    borderWidth: 1.5,
-    borderColor: '#DDD',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#222',
-    backgroundColor: '#FAFAFA',
-  },
-  statusRow: { flexDirection: 'row', gap: 10 },
-  statusBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#DDD',
-    alignItems: 'center',
-    backgroundColor: '#FAFAFA',
-  },
-  statusBtnActive: { borderColor: GREEN, backgroundColor: '#E8F5E9' },
-  statusBtnText: { fontSize: 14, fontWeight: '600', color: '#777' },
-  statusBtnTextActive: { color: GREEN },
-  confirmBtn: {
-    marginTop: 20,
-    backgroundColor: GREEN,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  confirmBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  cancelBtn: { marginTop: 10, alignItems: 'center', paddingVertical: 10 },
-  cancelBtnText: { color: '#888', fontSize: 14 },
 });

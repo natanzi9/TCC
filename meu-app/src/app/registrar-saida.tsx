@@ -1,7 +1,8 @@
 // ============================================================
-// registrar-saida.tsx — Formulário para registrar saída de estoque
+// registrar-saida.tsx — Registrar Saída de Insumos SGA SENAI
+// Estética e fluxo idênticos ao saidas.html / stylesaida.css
 // ============================================================
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -20,11 +21,10 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getEstoque, registrarSaida, EstoqueItem } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { SenaiColors } from '@/constants/theme';
+import { SenaiHeader } from '@/components/SenaiHeader';
 
-const RED = '#C62828';
-const BLUE = '#1565C0';
-
-interface ItemSaida {
+interface ItemRascunho {
   id: number;
   nome: string;
   qtde: number;
@@ -38,85 +38,109 @@ export default function RegistrarSaidaScreen() {
 
   const [estoque, setEstoque] = useState<EstoqueItem[]>([]);
   const [loadingEstoque, setLoadingEstoque] = useState(true);
-  const [search, setSearch] = useState('');
-  const [selecionarModal, setSelecionarModal] = useState(false);
 
-  const [itensSaida, setItensSaida] = useState<ItemSaida[]>([]);
+  // Campos do Solicitante / Saída
   const [solicitante, setSolicitante] = useState('');
-  const [almoxarife, setAlmoxarife] = useState(username ?? '');
-  const [data, setData] = useState(new Date().toISOString().slice(0, 10));
-  const [obs, setObs] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [almoxarife, setAlmoxarife] = useState(username ?? 'admin');
+  const [dataRetirada, setDataRetirada] = useState(new Date().toISOString().slice(0, 10));
+  const [finalidade, setFinalidade] = useState('');
+
+  // Item selecionado para adicionar
+  const [itemSelecionado, setItemSelecionado] = useState<EstoqueItem | null>(null);
+  const [itemQtde, setItemQtde] = useState('1');
+  const [temDevolucao, setTemDevolucao] = useState<'Sim' | 'Não'>('Não');
+
+  // Modal para escolher item
+  const [modalItemPicker, setModalItemPicker] = useState(false);
+  const [itemSearch, setItemSearch] = useState('');
+
+  // Lista de itens adicionados à saída (rascunho da tabela do web)
+  const [itensAdicionados, setItensAdicionados] = useState<ItemRascunho[]>([]);
+  const [loadingSalvar, setLoadingSalvar] = useState(false);
 
   useEffect(() => {
     getEstoque()
       .then(setEstoque)
-      .catch(() => Alert.alert('Erro', 'Falha ao carregar estoque.'))
+      .catch(() => Alert.alert('Erro', 'Não foi possível buscar o estoque.'))
       .finally(() => setLoadingEstoque(false));
   }, []);
 
-  const filtrado = estoque.filter((i) =>
-    i.nome.toLowerCase().includes(search.toLowerCase()),
+  const itensFiltrados = estoque.filter(
+    (i) =>
+      i.nome.toLowerCase().includes(itemSearch.toLowerCase()) ||
+      String(i.id).includes(itemSearch) ||
+      (i.categoria ?? '').toLowerCase().includes(itemSearch.toLowerCase()),
   );
 
-  function adicionarItemSaida(item: EstoqueItem) {
-    const existe = itensSaida.find((i) => i.id === item.id);
-    if (existe) {
-      Alert.alert('Atenção', 'Este item já foi adicionado.');
-      setSelecionarModal(false);
-      return;
-    }
+  function handleSelecionarItem(item: EstoqueItem) {
     if (item.quantidade <= 0) {
-      Alert.alert('Sem estoque', 'Este item não possui quantidade disponível.');
+      Alert.alert('Sem Estoque', `O item "${item.nome}" não possui saldo disponível.`);
       return;
     }
-    setItensSaida((prev) => [
+    setItemSelecionado(item);
+    setItemQtde('1');
+    setModalItemPicker(false);
+  }
+
+  function handleAdicionarNaTabela() {
+    if (!itemSelecionado) {
+      Alert.alert('Atenção', 'Selecione um item do estoque!');
+      return;
+    }
+    const q = parseInt(itemQtde, 10);
+    if (isNaN(q) || q <= 0) {
+      Alert.alert('Atenção', 'Informe uma quantidade válida maior que zero.');
+      return;
+    }
+    if (q > itemSelecionado.quantidade) {
+      Alert.alert(
+        'Saldo Insuficiente',
+        `A quantidade solicitada (${q}) é maior que o saldo em estoque (${itemSelecionado.quantidade}).`,
+      );
+      return;
+    }
+
+    const jaExiste = itensAdicionados.find((i) => i.id === itemSelecionado.id);
+    if (jaExiste) {
+      Alert.alert('Atenção', 'Este item já foi adicionado à tabela abaixo. Remova-o antes de alterar.');
+      return;
+    }
+
+    setItensAdicionados((prev) => [
       ...prev,
-      { id: item.id, nome: item.nome, qtde: 1, devolucao: 'Não', maxQtde: item.quantidade },
+      {
+        id: itemSelecionado.id,
+        nome: itemSelecionado.nome,
+        qtde: q,
+        devolucao: temDevolucao,
+        maxQtde: itemSelecionado.quantidade,
+      },
     ]);
-    setSelecionarModal(false);
-    setSearch('');
+
+    // Limpa a seleção do item atual
+    setItemSelecionado(null);
+    setItemQtde('1');
+    setTemDevolucao('Não');
   }
 
-  function removerItem(id: number) {
-    setItensSaida((prev) => prev.filter((i) => i.id !== id));
+  function handleRemoverDaTabela(id: number) {
+    setItensAdicionados((prev) => prev.filter((i) => i.id !== id));
   }
 
-  function atualizarQtde(id: number, qtde: string) {
-    const n = parseInt(qtde, 10);
-    setItensSaida((prev) =>
-      prev.map((i) => {
-        if (i.id !== id) return i;
-        const max = i.maxQtde;
-        return { ...i, qtde: isNaN(n) ? 0 : Math.min(Math.max(0, n), max) };
-      }),
-    );
-  }
-
-  function toggleDevolucao(id: number) {
-    setItensSaida((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, devolucao: i.devolucao === 'Sim' ? 'Não' : 'Sim' } : i)),
-    );
-  }
-
-  async function handleRegistrar() {
-    if (itensSaida.length === 0) {
-      Alert.alert('Atenção', 'Adicione ao menos um item à saída.');
-      return;
-    }
+  async function handleRegistrarTudo() {
     if (!solicitante.trim()) {
-      Alert.alert('Atenção', 'Informe o solicitante.');
+      Alert.alert('Atenção', 'Por favor, informe o Nome do Solicitante!');
       return;
     }
-    if (itensSaida.some((i) => i.qtde <= 0)) {
-      Alert.alert('Atenção', 'Todos os itens precisam ter quantidade > 0.');
+    if (itensAdicionados.length === 0) {
+      Alert.alert('Atenção', 'Adicione pelo menos um item à lista antes de registrar!');
       return;
     }
 
-    setLoading(true);
+    setLoadingSalvar(true);
     try {
       await registrarSaida({
-        itens: itensSaida.map((i) => ({
+        itens: itensAdicionados.map((i) => ({
           id: i.id,
           nome: i.nome,
           qtde: i.qtde,
@@ -124,181 +148,315 @@ export default function RegistrarSaidaScreen() {
         })),
         solicitante: solicitante.trim(),
         almoxarife: almoxarife.trim(),
-        data,
-        obs: obs.trim(),
+        data: dataRetirada,
+        obs: finalidade.trim(),
       });
-      Alert.alert('Sucesso', 'Saída registrada com sucesso!', [
-        { text: 'Ver Estoque', onPress: () => router.replace('/estoque') },
-        { text: 'Nova Saída', onPress: () => { setItensSaida([]); setSolicitante(''); setObs(''); } },
+
+      Alert.alert('Sucesso!', 'Saída registrada com sucesso no sistema!', [
+        {
+          text: 'Ver Histórico',
+          onPress: () => router.replace('/saidas'),
+        },
+        {
+          text: 'Nova Saída',
+          onPress: () => {
+            setItensAdicionados([]);
+            setSolicitante('');
+            setFinalidade('');
+            setItemSelecionado(null);
+          },
+        },
       ]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      Alert.alert('Erro', msg);
+      Alert.alert('Erro', `Falha ao registrar saída: ${msg}`);
     } finally {
-      setLoading(false);
+      setLoadingSalvar(false);
     }
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹ Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Registrar Saída</Text>
-        <View style={{ width: 60 }} />
-      </View>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <SenaiHeader title="REGISTRAR SAÍDAS" showBack={true} />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Itens Selecionados */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>📤 Itens da Saída</Text>
+          {/* Card 1: Formulário de Saída (estilo quadrado1 do saidas.html) */}
+          <View style={styles.quadrado}>
+            <Text style={styles.sectionHeaderTitle}>DADOS DA RETIRADA</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <strong>Nome do solicitante:</strong>
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ex: João Silva"
+                placeholderTextColor="#94A3B8"
+                value={solicitante}
+                onChangeText={setSolicitante}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <strong>Nome do almoxarife:</strong>
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Almoxarife responsável"
+                placeholderTextColor="#94A3B8"
+                value={almoxarife}
+                onChangeText={setAlmoxarife}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <strong>Data de retirada:</strong>
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="AAAA-MM-DD"
+                placeholderTextColor="#94A3B8"
+                value={dataRetirada}
+                onChangeText={setDataRetirada}
+              />
+            </View>
+
+            {/* Seleção do Item */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <strong>Item do estoque:</strong>
+              </Text>
               <TouchableOpacity
-                style={styles.addItemBtn}
-                onPress={() => setSelecionarModal(true)}
+                style={styles.itemPickerBtn}
+                onPress={() => setModalItemPicker(true)}
+                activeOpacity={0.8}
               >
-                <Text style={styles.addItemBtnText}>+ Item</Text>
+                <Text
+                  style={[
+                    styles.itemPickerText,
+                    !itemSelecionado && { color: '#94A3B8', fontStyle: 'italic' },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {itemSelecionado
+                    ? `[ID ${itemSelecionado.id}] ${itemSelecionado.nome} (Disp: ${itemSelecionado.quantidade})`
+                    : 'Toque para selecionar um item...'}
+                </Text>
+                <Text style={styles.itemPickerArrow}>🔍</Text>
               </TouchableOpacity>
             </View>
 
-            {itensSaida.length === 0 ? (
-              <View style={styles.noItems}>
-                <Text style={styles.noItemsText}>Toque em "+ Item" para adicionar produtos</Text>
+            {/* Quantidade e Devolução */}
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.label}>
+                  <strong>QTDE:</strong>
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  placeholder="1"
+                  value={itemQtde}
+                  onChangeText={setItemQtde}
+                />
               </View>
-            ) : (
-              itensSaida.map((item) => (
-                <View key={item.id} style={styles.itemRow}>
-                  <View style={styles.itemRowLeft}>
-                    <Text style={styles.itemNome} numberOfLines={1}>{item.nome}</Text>
-                    <Text style={styles.itemMax}>Disponível: {item.maxQtde}</Text>
-                  </View>
 
-                  <View style={styles.itemQtdeBox}>
-                    <TouchableOpacity
-                      onPress={() => atualizarQtde(item.id, String(item.qtde - 1))}
-                      style={styles.qtdeBtn}
-                    >
-                      <Text style={styles.qtdeBtnText}>−</Text>
-                    </TouchableOpacity>
-                    <TextInput
-                      style={styles.qtdeInput}
-                      value={String(item.qtde)}
-                      onChangeText={(v) => atualizarQtde(item.id, v)}
-                      keyboardType="numeric"
-                      textAlign="center"
-                    />
-                    <TouchableOpacity
-                      onPress={() => atualizarQtde(item.id, String(item.qtde + 1))}
-                      style={styles.qtdeBtn}
-                    >
-                      <Text style={styles.qtdeBtnText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-
+              <View style={[styles.inputGroup, { flex: 1.4 }]}>
+                <Text style={styles.label}>
+                  <strong>ITEM COM DEVOLUÇÃO?</strong>
+                </Text>
+                <View style={styles.devolucaoToggleRow}>
                   <TouchableOpacity
-                    style={[styles.devToggle, item.devolucao === 'Sim' && styles.devToggleOn]}
-                    onPress={() => toggleDevolucao(item.id)}
+                    style={[styles.toggleBtn, temDevolucao === 'Sim' && styles.toggleBtnActive]}
+                    onPress={() => setTemDevolucao('Sim')}
                   >
-                    <Text style={[styles.devToggleText, item.devolucao === 'Sim' && styles.devToggleTextOn]}>
-                      {item.devolucao === 'Sim' ? '↩ Dev.' : '↩'}
+                    <Text style={[styles.toggleBtnText, temDevolucao === 'Sim' && styles.toggleBtnTextActive]}>
+                      Sim
                     </Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity onPress={() => removerItem(item.id)} style={styles.removeBtn}>
-                    <Text style={styles.removeBtnText}>✕</Text>
+                  <TouchableOpacity
+                    style={[styles.toggleBtn, temDevolucao === 'Não' && styles.toggleBtnActive]}
+                    onPress={() => setTemDevolucao('Não')}
+                  >
+                    <Text style={[styles.toggleBtnText, temDevolucao === 'Não' && styles.toggleBtnTextActive]}>
+                      Não
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Finalidade */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <strong>Finalidade:</strong>
+              </Text>
+              <TextInput
+                style={[styles.input, styles.textarea]}
+                placeholder="Descreva a finalidade ou observação..."
+                placeholderTextColor="#94A3B8"
+                multiline
+                numberOfLines={3}
+                value={finalidade}
+                onChangeText={setFinalidade}
+              />
+            </View>
+
+            {/* Botão ADICIONAR ITEM NA TABELA */}
+            <TouchableOpacity
+              style={styles.btnAdicionar}
+              onPress={handleAdicionarNaTabela}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.btnAdicionarText}>+ ADICIONAR ITEM</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Card 2: ITENS ADICIONADOS (estilo quadrado2 do saidas.html) */}
+          <View style={[styles.quadrado, { marginTop: 14 }]}>
+            <Text style={styles.sectionHeaderTitle}>ITENS ADICIONADOS ({itensAdicionados.length})</Text>
+
+            {/* Cabeçalho da Tabela */}
+            <View style={styles.tableHead}>
+              <Text style={[styles.th, { width: 36, textAlign: 'center' }]}>ID</Text>
+              <Text style={[styles.th, { flex: 2 }]}>Nome</Text>
+              <Text style={[styles.th, { width: 44, textAlign: 'center' }]}>Qtd</Text>
+              <Text style={[styles.th, { width: 48, textAlign: 'center' }]}>Dev?</Text>
+              <Text style={[styles.th, { width: 36, textAlign: 'center' }]}>Excluir</Text>
+            </View>
+
+            {itensAdicionados.length === 0 ? (
+              <View style={styles.emptyTable}>
+                <Text style={styles.emptyTableText}>Nenhum item adicionado ainda.</Text>
+                <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
+                  Selecione o insumo acima e toque em "ADICIONAR ITEM".
+                </Text>
+              </View>
+            ) : (
+              itensAdicionados.map((item, index) => (
+                <View
+                  key={`draft-${item.id}-${index}`}
+                  style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlt]}
+                >
+                  <Text style={[styles.td, { width: 36, textAlign: 'center', fontWeight: 'bold' }]}>
+                    {item.id}
+                  </Text>
+                  <Text style={[styles.td, { flex: 2 }]} numberOfLines={1}>
+                    {item.nome}
+                  </Text>
+                  <Text style={[styles.td, { width: 44, textAlign: 'center', fontWeight: 'bold' }]}>
+                    {item.qtde}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.td,
+                      { width: 48, textAlign: 'center', fontWeight: 'bold' },
+                      item.devolucao === 'Sim' ? { color: SenaiColors.orange } : { color: '#64748B' },
+                    ]}
+                  >
+                    {item.devolucao}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.btnLixeira}
+                    onPress={() => handleRemoverDaTabela(item.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.lixeiraText}>🗑</Text>
                   </TouchableOpacity>
                 </View>
               ))
             )}
+
+            {/* Botão Final REGISTRAR SAÍDA */}
+            <TouchableOpacity
+              style={[
+                styles.btnRegistrar,
+                (itensAdicionados.length === 0 || loadingSalvar) && styles.btnDisabled,
+              ]}
+              onPress={handleRegistrarTudo}
+              disabled={itensAdicionados.length === 0 || loadingSalvar}
+              activeOpacity={0.85}
+            >
+              {loadingSalvar ? (
+                <ActivityIndicator color={SenaiColors.darkBlue} size="small" />
+              ) : (
+                <Text style={styles.btnRegistrarText}>REGISTRAR SAÍDA</Text>
+              )}
+            </TouchableOpacity>
           </View>
-
-          {/* Dados da saída */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>📋 Dados da Saída</Text>
-
-            <Field label="Solicitante *" value={solicitante} onChange={setSolicitante} placeholder="Nome do solicitante" />
-            <Field label="Almoxarife" value={almoxarife} onChange={setAlmoxarife} placeholder="Nome do almoxarife" />
-            <Field label="Data" value={data} onChange={setData} placeholder="AAAA-MM-DD" />
-            <Field
-              label="Finalidade / Observação"
-              value={obs}
-              onChange={setObs}
-              placeholder="Para que será usado..."
-              multiline
-            />
-          </View>
-
-          {/* Botão Registrar */}
-          <TouchableOpacity
-            style={[styles.registerBtn, loading && { opacity: 0.6 }]}
-            onPress={handleRegistrar}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.registerBtnText}>✓ Registrar Saída</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={{ height: 32 }} />
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Modal de seleção de item */}
-      <Modal
-        visible={selecionarModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setSelecionarModal(false)}
-      >
+      {/* Modal para Escolher Item do Estoque */}
+      <Modal visible={modalItemPicker} transparent animationType="slide" onRequestClose={() => setModalItemPicker(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>Selecionar Item</Text>
-              <TouchableOpacity onPress={() => setSelecionarModal(false)}>
-                <Text style={styles.modalClose}>✕</Text>
+            <View style={styles.modalHead}>
+              <Text style={styles.modalTitle}>Selecionar Item do Estoque</Text>
+              <TouchableOpacity onPress={() => setModalItemPicker(false)} style={styles.modalClose}>
+                <Text style={styles.modalCloseText}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.searchBox}>
-              <Text style={styles.searchIcon}>🔍</Text>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Buscar produto..."
-                placeholderTextColor="#999"
-                value={search}
-                onChangeText={setSearch}
-                autoFocus
-              />
-            </View>
+            <TextInput
+              style={styles.modalSearchInput}
+              placeholder="Buscar insumo por nome ou ID..."
+              placeholderTextColor="#94A3B8"
+              value={itemSearch}
+              onChangeText={setItemSearch}
+            />
 
             {loadingEstoque ? (
-              <ActivityIndicator color={BLUE} style={{ marginTop: 24 }} />
+              <ActivityIndicator color={SenaiColors.orange} style={{ marginVertical: 32 }} />
             ) : (
               <FlatList
-                data={filtrado}
-                keyExtractor={(i) => String(i.id)}
-                style={{ maxHeight: 400 }}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[styles.estoqueItem, item.quantidade <= 0 && { opacity: 0.4 }]}
-                    onPress={() => adicionarItemSaida(item)}
-                    disabled={item.quantidade <= 0}
-                  >
-                    <Text style={styles.estoqueItemNome}>{item.nome}</Text>
-                    <Text style={styles.estoqueItemQtde}>Qtd: {item.quantidade}</Text>
-                  </TouchableOpacity>
-                )}
-                ListEmptyComponent={<Text style={styles.emptyText}>Nenhum item encontrado.</Text>}
-                ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: '#F0F0F0' }} />}
+                data={itensFiltrados}
+                keyExtractor={(item) => String(item.id)}
+                style={{ maxHeight: 350 }}
+                renderItem={({ item }) => {
+                  const semSaldo = item.quantidade <= 0;
+                  return (
+                    <TouchableOpacity
+                      style={[styles.pickerItemRow, semSaldo && { opacity: 0.5 }]}
+                      onPress={() => handleSelecionarItem(item)}
+                      disabled={semSaldo}
+                      activeOpacity={0.7}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pickerItemNome}>
+                          {item.nome}
+                        </Text>
+                        <Text style={styles.pickerItemCat}>
+                          ID: {item.id} • {item.categoria || 'Sem categoria'}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text
+                          style={[
+                            styles.pickerItemQtd,
+                            semSaldo ? { color: SenaiColors.danger } : { color: SenaiColors.success },
+                          ]}
+                        >
+                          {semSaldo ? 'Esgotado' : `${item.quantidade} un.`}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={
+                  <View style={{ padding: 24, alignItems: 'center' }}>
+                    <Text style={{ color: '#94A3B8' }}>Nenhum item encontrado.</Text>
+                  </View>
+                }
               />
             )}
           </View>
@@ -308,183 +466,254 @@ export default function RegistrarSaidaScreen() {
   );
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  multiline = false,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  multiline?: boolean;
-}) {
-  return (
-    <View style={{ marginBottom: 4 }}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        style={[styles.input, multiline && styles.inputMulti]}
-        value={value}
-        onChangeText={onChange}
-        placeholder={placeholder}
-        placeholderTextColor="#999"
-        multiline={multiline}
-        numberOfLines={multiline ? 3 : 1}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F0F4F8' },
-
-  header: {
-    backgroundColor: RED,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
+  safe: {
+    flex: 1,
+    backgroundColor: SenaiColors.pageBg,
   },
-  backBtn: { width: 60 },
-  backText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  headerTitle: { flex: 1, color: '#fff', fontSize: 20, fontWeight: '700', textAlign: 'center' },
-
-  scroll: { padding: 16, gap: 16 },
-
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+  container: {
+    flex: 1,
   },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#1A1A2E' },
-  addItemBtn: {
-    backgroundColor: RED,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 10,
-  },
-  addItemBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-
-  noItems: {
-    padding: 24,
-    alignItems: 'center',
-    backgroundColor: '#FFF5F5',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#FFCDD2',
-    borderStyle: 'dashed',
-  },
-  noItemsText: { color: '#888', fontSize: 14 },
-
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    gap: 6,
-  },
-  itemRowLeft: { flex: 1 },
-  itemNome: { fontSize: 14, fontWeight: '600', color: '#222' },
-  itemMax: { fontSize: 11, color: '#999', marginTop: 2 },
-
-  itemQtdeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-  },
-  qtdeBtn: { paddingHorizontal: 10, paddingVertical: 6 },
-  qtdeBtnText: { fontSize: 18, color: '#333', fontWeight: '700' },
-  qtdeInput: {
-    width: 36,
-    textAlign: 'center',
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#222',
-    paddingVertical: 4,
-  },
-
-  devToggle: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: '#F0F0F0',
-    borderWidth: 1,
-    borderColor: '#DDD',
-  },
-  devToggleOn: { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' },
-  devToggleText: { fontSize: 11, fontWeight: '700', color: '#888' },
-  devToggleTextOn: { color: '#2E7D32' },
-
-  removeBtn: { padding: 6 },
-  removeBtnText: { fontSize: 16, color: '#E53935' },
-
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6, marginTop: 12 },
-  input: {
-    borderWidth: 1.5,
-    borderColor: '#DDD',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#222',
-    backgroundColor: '#FAFAFA',
-  },
-  inputMulti: { height: 80, textAlignVertical: 'top' },
-
-  registerBtn: {
-    backgroundColor: RED,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    shadowColor: RED,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  registerBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
+  scrollContent: {
+    padding: 12,
     paddingBottom: 32,
   },
-  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A2E' },
-  modalClose: { fontSize: 20, color: '#888', padding: 4 },
-
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 10,
-    paddingHorizontal: 12,
+  quadrado: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: SenaiColors.cardRadius,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  sectionHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: SenaiColors.secondary,
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  inputGroup: {
     marginBottom: 12,
   },
-  searchIcon: { fontSize: 15, marginRight: 6 },
-  searchInput: { flex: 1, paddingVertical: 10, fontSize: 15, color: '#222' },
-
-  estoqueItem: {
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: SenaiColors.primary,
+    marginBottom: 4,
+  },
+  input: {
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    backgroundColor: '#F8FAFC',
+    color: SenaiColors.textDark,
+  },
+  textarea: {
+    minHeight: 64,
+    textAlignVertical: 'top',
+  },
+  itemPickerBtn: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: '#F8FAFC',
   },
-  estoqueItemNome: { fontSize: 15, fontWeight: '600', color: '#222', flex: 1 },
-  estoqueItemQtde: { fontSize: 14, color: '#666', fontWeight: '500', marginLeft: 8 },
-  emptyText: { textAlign: 'center', color: '#AAA', fontSize: 14, paddingVertical: 24 },
+  itemPickerText: {
+    fontSize: 14,
+    color: SenaiColors.textDark,
+    fontWeight: '600',
+    flex: 1,
+  },
+  itemPickerArrow: {
+    fontSize: 16,
+    marginLeft: 6,
+  },
+  devolucaoToggleRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 2,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  toggleBtnActive: {
+    backgroundColor: SenaiColors.orange,
+    borderColor: SenaiColors.orange,
+  },
+  toggleBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  toggleBtnTextActive: {
+    color: SenaiColors.darkBlue,
+    fontWeight: '900',
+  },
+  btnAdicionar: {
+    backgroundColor: '#E0F2FE',
+    borderWidth: 1.5,
+    borderColor: SenaiColors.primary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  btnAdicionarText: {
+    color: SenaiColors.primary,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tableHead: {
+    flexDirection: 'row',
+    backgroundColor: SenaiColors.secondary,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    marginBottom: 4,
+  },
+  th: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+  },
+  tableRowAlt: {
+    backgroundColor: '#F8FAFC',
+  },
+  td: {
+    fontSize: 13,
+    color: SenaiColors.textDark,
+  },
+  btnLixeira: {
+    width: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  lixeiraText: {
+    fontSize: 16,
+  },
+  emptyTable: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyTableText: {
+    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  btnRegistrar: {
+    backgroundColor: SenaiColors.orange,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 16,
+    shadowColor: SenaiColors.orange,
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  btnRegistrarText: {
+    color: SenaiColors.darkBlue,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 18,
+    width: '100%',
+    maxWidth: 420,
+    elevation: 6,
+  },
+  modalHead: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: SenaiColors.primary,
+  },
+  modalClose: {
+    padding: 4,
+  },
+  modalCloseText: {
+    fontSize: 18,
+    color: '#94A3B8',
+    fontWeight: 'bold',
+  },
+  modalSearchInput: {
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    marginBottom: 10,
+    backgroundColor: '#F8FAFC',
+  },
+  pickerItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  pickerItemNome: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SenaiColors.textDark,
+  },
+  pickerItemCat: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  pickerItemQtd: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
 });

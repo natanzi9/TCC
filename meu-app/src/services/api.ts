@@ -2,9 +2,30 @@
 // API Service - SGA SENAI Mobile
 // Centraliza todas as chamadas HTTP ao backend Flask
 // ============================================================
+import { Platform } from 'react-native';
 
-// IP do servidor — ajuste se necessário
-export const API_BASE = 'http://10.154.49.132:5000';
+export function resolveDefaultApiBase(): string {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000`;
+    }
+    return 'http://localhost:5000';
+  }
+  // IP da máquina na rede local Wi-Fi
+  return 'http://10.154.49.255:5000';
+}
+
+let currentApiBase = resolveDefaultApiBase();
+
+export function getApiBase(): string {
+  return currentApiBase;
+}
+
+export function setApiBase(newUrl: string): void {
+  currentApiBase = newUrl.replace(/\/+$/, '');
+}
+
+export const API_BASE = currentApiBase;
 
 // ---- tipos ----
 
@@ -27,6 +48,7 @@ export interface Saida {
   solicitante?: string;
   almoxarife?: string;
   descricao?: string;
+  categoria?: string;
   devolucao?: string;
   qtde_devolvida?: number;
   status_devolucao?: string;
@@ -48,16 +70,21 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export function getItemImageUrl(imagem?: string | null): string | null {
+  if (!imagem || imagem.trim() === '') return null;
+  return `${getApiBase()}/static/uploads/${imagem}`;
+}
+
 // ---- estoque ----
 
 export async function getEstoque(): Promise<EstoqueItem[]> {
-  const res = await fetch(`${API_BASE}/api/estoque`);
+  const res = await fetch(`${getApiBase()}/api/estoque`);
   const json = await handleResponse<{ sucesso: boolean; estoque: EstoqueItem[] }>(res);
   return json.estoque ?? [];
 }
 
 export async function adicionarItem(item: Omit<EstoqueItem, 'id'>): Promise<{ sucesso: boolean; id: number }> {
-  const res = await fetch(`${API_BASE}/api/adicionarestoque`, {
+  const res = await fetch(`${getApiBase()}/api/adicionarestoque`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item),
@@ -65,8 +92,27 @@ export async function adicionarItem(item: Omit<EstoqueItem, 'id'>): Promise<{ su
   return handleResponse(res);
 }
 
+export async function alterarItem(
+  id: number,
+  item: Partial<EstoqueItem>,
+): Promise<{ sucesso: boolean; mensagem: string }> {
+  const res = await fetch(`${getApiBase()}/api/alteraritem/${id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  });
+  return handleResponse(res);
+}
+
+export async function removerItem(id: number): Promise<{ sucesso: boolean; mensagem: string }> {
+  const res = await fetch(`${getApiBase()}/api/removeritem/${id}`, {
+    method: 'DELETE',
+  });
+  return handleResponse(res);
+}
+
 export async function getItemCompleto(id: number): Promise<EstoqueItem> {
-  const res = await fetch(`${API_BASE}/api/item_completo/${id}`);
+  const res = await fetch(`${getApiBase()}/api/item_completo/${id}`);
   return handleResponse(res);
 }
 
@@ -80,8 +126,14 @@ export interface RegistrarSaidaPayload {
   obs: string;
 }
 
+export async function getSaidas(): Promise<Saida[]> {
+  const res = await fetch(`${getApiBase()}/api/saidas`);
+  const json = await handleResponse<{ sucesso: boolean; saidas: Saida[] }>(res);
+  return json.saidas ?? [];
+}
+
 export async function registrarSaida(payload: RegistrarSaidaPayload): Promise<{ ok: boolean }> {
-  const res = await fetch(`${API_BASE}/api/registrarsaida`, {
+  const res = await fetch(`${getApiBase()}/api/registrarsaida`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -95,7 +147,7 @@ export async function registrarDevolucao(payload: {
   status: 'parcial' | 'total';
   saida_id: number;
 }): Promise<{ ok: boolean }> {
-  const res = await fetch(`${API_BASE}/api/devolucao`, {
+  const res = await fetch(`${getApiBase()}/api/devolucao`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -106,24 +158,40 @@ export async function registrarDevolucao(payload: {
 // ---- login ----
 
 export async function checarAdm(username: string, senha: string): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/api/checar_adm`, {
+  const res = await fetch(`${getApiBase()}/api/checar_adm`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, senha }),
   });
   const json = await handleResponse<{ valido: boolean }>(res);
-  return json.valido;
+  return !!json.valido;
+}
+
+export async function loginUsuario(username: string, senha: string): Promise<boolean> {
+  const form = new FormData();
+  form.append('username', username);
+  form.append('senha', senha);
+  form.append('tipo', 'user');
+
+  const res = await fetch(`${getApiBase()}/api/login`, {
+    method: 'POST',
+    body: form,
+  });
+
+  const text = await res.text();
+  const isError = text.includes('alert(') || text.includes('incorretos');
+  return !isError;
 }
 
 // ---- usuários ----
 
 export async function getUsuarios(): Promise<{ sucesso: boolean; usuarios: Array<{ id: number; usuario: string }> }> {
-  const res = await fetch(`${API_BASE}/api/mostraruser`);
+  const res = await fetch(`${getApiBase()}/api/mostraruser`);
   return handleResponse(res);
 }
 
 export async function criarUsuario(usuario: string, senha: string): Promise<{ sucesso: boolean; id: number }> {
-  const res = await fetch(`${API_BASE}/api/adicionaruser`, {
+  const res = await fetch(`${getApiBase()}/api/adicionaruser`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ usuario, senha }),
@@ -132,6 +200,6 @@ export async function criarUsuario(usuario: string, senha: string): Promise<{ su
 }
 
 export async function removerUsuario(id: number): Promise<{ sucesso: boolean }> {
-  const res = await fetch(`${API_BASE}/api/remover/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${getApiBase()}/api/remover/${id}`, { method: 'DELETE' });
   return handleResponse(res);
 }
