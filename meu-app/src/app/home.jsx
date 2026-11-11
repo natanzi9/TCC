@@ -1,5 +1,5 @@
 // ============================================================
-// home.tsx — Dashboard Principal SGA SENAI
+// home.jsx — Dashboard Principal SGA SENAI
 // Estética idêntica ao home.html e home.css do sistema web
 // ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
@@ -19,7 +19,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
-import { getEstoque, getSaidas, registrarDevolucao, EstoqueItem, Saida } from '@/services/api';
+import { getEstoque, getSaidas, registrarDevolucao } from '@/services/api';
 import { SenaiColors } from '@/constants/theme';
 import { ImageModal } from '@/components/ImageModal';
 
@@ -27,21 +27,21 @@ export default function HomeScreen() {
   const { username, isAdm, signOut } = useAuth();
   const router = useRouter();
 
-  const [itens, setItens] = useState<EstoqueItem[]>([]);
-  const [saidas, setSaidas] = useState<Saida[]>([]);
+  const [itens, setItens] = useState([]);
+  const [saidas, setSaidas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Modal para visualização de foto
   const [imageModalVisible, setImageModalVisible] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedItemName, setSelectedItemName] = useState<string>('');
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedItemName, setSelectedItemName] = useState('');
 
   // Modal para devolução rápida
   const [devModalVisible, setDevModalVisible] = useState(false);
-  const [selectedSaida, setSelectedSaida] = useState<Saida | null>(null);
-  const [devQtde, setDevQtde] = useState<string>('1');
-  const [devTipo, setDevTipo] = useState<'parcial' | 'total'>('total');
+  const [selectedSaida, setSelectedSaida] = useState(null);
+  const [devQtde, setDevQtde] = useState('1');
+  const [devTipo, setDevTipo] = useState('total');
   const [devLoading, setDevLoading] = useState(false);
 
   const carregarDados = useCallback(async () => {
@@ -87,13 +87,13 @@ export default function HomeScreen() {
     ]);
   }
 
-  function abrirFoto(item: EstoqueItem) {
+  function abrirFoto(item) {
     setSelectedImage(item.imagem ?? null);
     setSelectedItemName(item.nome);
     setImageModalVisible(true);
   }
 
-  function abrirDevolucaoRapida(saida: Saida, tipo: 'parcial' | 'total') {
+  function abrirDevolucaoRapida(saida, tipo) {
     setSelectedSaida(saida);
     setDevTipo(tipo);
     setDevQtde(tipo === 'total' ? String(saida.qtde) : '1');
@@ -123,7 +123,7 @@ export default function HomeScreen() {
       Alert.alert('Sucesso', `Devolução ${devTipo} registrada com sucesso!`);
       setDevModalVisible(false);
       carregarDados();
-    } catch (err: unknown) {
+    } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       Alert.alert('Erro', `Falha ao registrar devolução: ${msg}`);
     } finally {

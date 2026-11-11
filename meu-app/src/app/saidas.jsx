@@ -1,5 +1,5 @@
 // ============================================================
-// saidas.tsx — Histórico de Saídas e Controle de Devoluções SGA SENAI
+// saidas.jsx — Histórico de Saídas e Controle de Devoluções SGA SENAI
 // Estética idêntica ao saidas.html / stylesaida.css
 // ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
@@ -16,24 +16,24 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getSaidas, registrarDevolucao, Saida } from '@/services/api';
+import { getSaidas, registrarDevolucao } from '@/services/api';
 import { SenaiColors } from '@/constants/theme';
 import { SenaiHeader } from '@/components/SenaiHeader';
 
 export default function SaidasScreen() {
   const router = useRouter();
 
-  const [saidas, setSaidas] = useState<Saida[]>([]);
+  const [saidas, setSaidas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
-  const [filtro, setFiltro] = useState<'todas' | 'pendentes' | 'devolvidas'>('todas');
+  const [filtro, setFiltro] = useState('todas');
 
   // Modal para Devolução
   const [devModal, setDevModal] = useState(false);
-  const [devSaida, setDevSaida] = useState<Saida | null>(null);
+  const [devSaida, setDevSaida] = useState(null);
   const [devQtde, setDevQtde] = useState('1');
-  const [devStatus, setDevStatus] = useState<'parcial' | 'total'>('total');
+  const [devStatus, setDevStatus] = useState('total');
   const [devLoading, setDevLoading] = useState(false);
 
   const carregarSaidas = useCallback(async () => {
@@ -70,7 +70,7 @@ export default function SaidasScreen() {
     return true;
   });
 
-  function abrirModalDevolucao(saida: Saida, tipo: 'parcial' | 'total' = 'total') {
+  function abrirModalDevolucao(saida, tipo = 'total') {
     setDevSaida(saida);
     setDevStatus(tipo);
     setDevQtde(tipo === 'total' ? String(saida.qtde) : '1');
@@ -100,7 +100,7 @@ export default function SaidasScreen() {
       Alert.alert('Sucesso', 'Devolução registrada no estoque com sucesso!');
       setDevModal(false);
       carregarSaidas();
-    } catch (err: unknown) {
+    } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       Alert.alert('Erro', `Falha ao registrar devolução: ${msg}`);
     } finally {

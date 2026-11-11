@@ -1,5 +1,5 @@
 // ===== CONFIGURAÇÃO DA API GROQ =====
-const GROQ_API_KEY = "";
+const GROQ_API_KEY = "gsk_fvnm9hmIua038etllEGsWGdyb3FYnh0c3FqtD7VKQvpeNFk4gBd";
 
 // ===== DESTACA O BOTÃO DA PÁGINA ATUAL NA NAVBAR =====
 function colorir() {

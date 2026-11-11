@@ -1,5 +1,5 @@
-// ============================================================
-// _layout.tsx — Raiz do app com AuthProvider e navegação
+﻿// ============================================================
+// _layout.jsx — Raiz do app com AuthProvider e navegação
 // ============================================================
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';

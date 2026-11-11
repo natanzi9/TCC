@@ -1,5 +1,5 @@
 // ============================================================
-// usuarios.tsx — Gestão de Usuários SGA SENAI (Somente ADM)
+// usuarios.jsx — Gestão de Usuários SGA SENAI (Somente ADM)
 // Estética idêntica ao criarconta.html / stylecc.css
 // ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
@@ -23,16 +23,11 @@ import { useAuth } from '@/context/AuthContext';
 import { SenaiColors } from '@/constants/theme';
 import { SenaiHeader } from '@/components/SenaiHeader';
 
-interface Usuario {
-  id: number;
-  usuario: string;
-}
-
 export default function UsuariosScreen() {
   const router = useRouter();
-  const { isAdm, username } = useAuth();
+  const { isAdm, isAuthenticated, username } = useAuth();
 
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -44,11 +39,15 @@ export default function UsuariosScreen() {
   const [criarLoading, setCriarLoading] = useState(false);
 
   useEffect(() => {
-    if (!isAdm) {
+    if (isAuthenticated && !isAdm) {
       Alert.alert('Acesso Restrito', 'Esta funcionalidade é exclusiva para administradores.');
       router.replace('/home');
     }
-  }, [isAdm]);
+  }, [isAuthenticated, isAdm]);
+
+  // Não renderiza nada se não for ADM
+  if (!isAdm) return null;
+
 
   const carregar = useCallback(async () => {
     try {
@@ -89,7 +88,7 @@ export default function UsuariosScreen() {
       setNovaSenha('');
       setConfirmarSenha('');
       carregar();
-    } catch (err: unknown) {
+    } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       Alert.alert('Erro', `Falha ao cadastrar: ${msg}`);
     } finally {
@@ -97,7 +96,7 @@ export default function UsuariosScreen() {
     }
   }
 
-  function handleRemover(user: Usuario) {
+  function handleRemover(user) {
     if (user.usuario === username) {
       Alert.alert('Atenção', 'Você não pode remover seu próprio usuário logado!');
       return;
@@ -115,7 +114,7 @@ export default function UsuariosScreen() {
               await removerUsuario(user.id);
               Alert.alert('Sucesso', 'Usuário removido com sucesso.');
               setUsuarios((prev) => prev.filter((u) => u.id !== user.id));
-            } catch (err: unknown) {
+            } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
               Alert.alert('Erro', `Falha ao remover usuário: ${msg}`);
             }
@@ -220,9 +219,7 @@ export default function UsuariosScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <strong>Usuário:</strong>
-              </Text>
+              <Text style={styles.label}>Usuário:</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Digite o login do usuário"
@@ -234,9 +231,7 @@ export default function UsuariosScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <strong>Senha:</strong>
-              </Text>
+              <Text style={styles.label}>Senha:</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Digite a senha"
@@ -248,9 +243,7 @@ export default function UsuariosScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <strong>CONFIRMAR SENHA:</strong>
-              </Text>
+              <Text style={styles.label}>CONFIRMAR SENHA:</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Confirme a senha"
@@ -260,6 +253,7 @@ export default function UsuariosScreen() {
                 onChangeText={setConfirmarSenha}
               />
             </View>
+
 
             <TouchableOpacity
               style={[styles.btnCriarConfirmar, criarLoading && { opacity: 0.6 }]}

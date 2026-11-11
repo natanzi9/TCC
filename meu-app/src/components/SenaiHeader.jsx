@@ -1,15 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SenaiColors } from '@/constants/theme';
 
-interface SenaiHeaderProps {
-  title: string;
-  showBack?: boolean;
-  rightAction?: React.ReactNode;
-}
-
-export function SenaiHeader({ title, showBack = true, rightAction }: SenaiHeaderProps) {
+export function SenaiHeader({ title, showBack = true, rightAction }) {
   const router = useRouter();
 
   return (

@@ -1,5 +1,5 @@
 // ============================================================
-// registrar-saida.tsx — Registrar Saída de Insumos SGA SENAI
+// registrar-saida.jsx — Registrar Saída de Insumos SGA SENAI
 // Estética e fluxo idênticos ao saidas.html / stylesaida.css
 // ============================================================
 import React, { useEffect, useState } from 'react';
@@ -19,24 +19,16 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getEstoque, registrarSaida, EstoqueItem } from '@/services/api';
+import { getEstoque, registrarSaida } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { SenaiColors } from '@/constants/theme';
 import { SenaiHeader } from '@/components/SenaiHeader';
-
-interface ItemRascunho {
-  id: number;
-  nome: string;
-  qtde: number;
-  devolucao: 'Sim' | 'Não';
-  maxQtde: number;
-}
 
 export default function RegistrarSaidaScreen() {
   const router = useRouter();
   const { username } = useAuth();
 
-  const [estoque, setEstoque] = useState<EstoqueItem[]>([]);
+  const [estoque, setEstoque] = useState([]);
   const [loadingEstoque, setLoadingEstoque] = useState(true);
 
   // Campos do Solicitante / Saída
@@ -46,16 +38,16 @@ export default function RegistrarSaidaScreen() {
   const [finalidade, setFinalidade] = useState('');
 
   // Item selecionado para adicionar
-  const [itemSelecionado, setItemSelecionado] = useState<EstoqueItem | null>(null);
+  const [itemSelecionado, setItemSelecionado] = useState(null);
   const [itemQtde, setItemQtde] = useState('1');
-  const [temDevolucao, setTemDevolucao] = useState<'Sim' | 'Não'>('Não');
+  const [temDevolucao, setTemDevolucao] = useState('Não');
 
   // Modal para escolher item
   const [modalItemPicker, setModalItemPicker] = useState(false);
   const [itemSearch, setItemSearch] = useState('');
 
   // Lista de itens adicionados à saída (rascunho da tabela do web)
-  const [itensAdicionados, setItensAdicionados] = useState<ItemRascunho[]>([]);
+  const [itensAdicionados, setItensAdicionados] = useState([]);
   const [loadingSalvar, setLoadingSalvar] = useState(false);
 
   useEffect(() => {
@@ -72,7 +64,7 @@ export default function RegistrarSaidaScreen() {
       (i.categoria ?? '').toLowerCase().includes(itemSearch.toLowerCase()),
   );
 
-  function handleSelecionarItem(item: EstoqueItem) {
+  function handleSelecionarItem(item) {
     if (item.quantidade <= 0) {
       Alert.alert('Sem Estoque', `O item "${item.nome}" não possui saldo disponível.`);
       return;
@@ -123,7 +115,7 @@ export default function RegistrarSaidaScreen() {
     setTemDevolucao('Não');
   }
 
-  function handleRemoverDaTabela(id: number) {
+  function handleRemoverDaTabela(id) {
     setItensAdicionados((prev) => prev.filter((i) => i.id !== id));
   }
 
@@ -167,7 +159,7 @@ export default function RegistrarSaidaScreen() {
           },
         },
       ]);
-    } catch (err: unknown) {
+    } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       Alert.alert('Erro', `Falha ao registrar saída: ${msg}`);
     } finally {
@@ -186,14 +178,12 @@ export default function RegistrarSaidaScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Card 1: Formulário de Saída (estilo quadrado1 do saidas.html) */}
+          {/* Card 1: Formulário de Saída */}
           <View style={styles.quadrado}>
             <Text style={styles.sectionHeaderTitle}>DADOS DA RETIRADA</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <strong>Nome do solicitante:</strong>
-              </Text>
+              <Text style={styles.label}>Nome do solicitante:</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Ex: João Silva"
@@ -204,9 +194,7 @@ export default function RegistrarSaidaScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <strong>Nome do almoxarife:</strong>
-              </Text>
+              <Text style={styles.label}>Nome do almoxarife:</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Almoxarife responsável"
@@ -217,9 +205,7 @@ export default function RegistrarSaidaScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <strong>Data de retirada:</strong>
-              </Text>
+              <Text style={styles.label}>Data de retirada:</Text>
               <TextInput
                 style={styles.input}
                 placeholder="AAAA-MM-DD"
@@ -231,9 +217,7 @@ export default function RegistrarSaidaScreen() {
 
             {/* Seleção do Item */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <strong>Item do estoque:</strong>
-              </Text>
+              <Text style={styles.label}>Item do estoque:</Text>
               <TouchableOpacity
                 style={styles.itemPickerBtn}
                 onPress={() => setModalItemPicker(true)}
@@ -257,9 +241,7 @@ export default function RegistrarSaidaScreen() {
             {/* Quantidade e Devolução */}
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>
-                  <strong>QTDE:</strong>
-                </Text>
+                <Text style={styles.label}>QTDE:</Text>
                 <TextInput
                   style={styles.input}
                   keyboardType="numeric"
@@ -270,9 +252,7 @@ export default function RegistrarSaidaScreen() {
               </View>
 
               <View style={[styles.inputGroup, { flex: 1.4 }]}>
-                <Text style={styles.label}>
-                  <strong>ITEM COM DEVOLUÇÃO?</strong>
-                </Text>
+                <Text style={styles.label}>ITEM COM DEVOLUÇÃO?</Text>
                 <View style={styles.devolucaoToggleRow}>
                   <TouchableOpacity
                     style={[styles.toggleBtn, temDevolucao === 'Sim' && styles.toggleBtnActive]}
@@ -297,9 +277,7 @@ export default function RegistrarSaidaScreen() {
 
             {/* Finalidade */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <strong>Finalidade:</strong>
-              </Text>
+              <Text style={styles.label}>Finalidade:</Text>
               <TextInput
                 style={[styles.input, styles.textarea]}
                 placeholder="Descreva a finalidade ou observação..."
@@ -321,7 +299,7 @@ export default function RegistrarSaidaScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Card 2: ITENS ADICIONADOS (estilo quadrado2 do saidas.html) */}
+          {/* Card 2: ITENS ADICIONADOS */}
           <View style={[styles.quadrado, { marginTop: 14 }]}>
             <Text style={styles.sectionHeaderTitle}>ITENS ADICIONADOS ({itensAdicionados.length})</Text>
 

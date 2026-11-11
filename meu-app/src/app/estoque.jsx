@@ -1,5 +1,5 @@
 // ============================================================
-// estoque.tsx — Listagem e Busca de Itens do Estoque SGA SENAI
+// estoque.jsx — Listagem e Busca de Itens do Estoque SGA SENAI
 // Estética idêntica ao estoque.html / styleestoque.css
 // ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getEstoque, getItemCompleto, removerItem, EstoqueItem, getItemImageUrl, getApiBase } from '@/services/api';
+import { getEstoque, getItemCompleto, removerItem, getItemImageUrl, getApiBase } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { SenaiColors } from '@/constants/theme';
 import { SenaiHeader } from '@/components/SenaiHeader';
@@ -28,20 +28,20 @@ export default function EstoqueScreen() {
   const router = useRouter();
   const { isAdm } = useAuth();
 
-  const [itens, setItens] = useState<EstoqueItem[]>([]);
+  const [itens, setItens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
 
   // Modal de Detalhes
-  const [selected, setSelected] = useState<EstoqueItem | null>(null);
+  const [selected, setSelected] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Modal de Foto
   const [imageModalVisible, setImageModalVisible] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedItemName, setSelectedItemName] = useState<string>('');
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedItemName, setSelectedItemName] = useState('');
 
   const carregar = useCallback(async () => {
     try {
@@ -67,7 +67,7 @@ export default function EstoqueScreen() {
       String(i.id).includes(search),
   );
 
-  async function handlePressItem(item: EstoqueItem) {
+  async function handlePressItem(item) {
     try {
       const full = await getItemCompleto(item.id);
       setSelected(full);
@@ -77,13 +77,13 @@ export default function EstoqueScreen() {
     setModalVisible(true);
   }
 
-  function handleVerFoto(item: EstoqueItem) {
+  function handleVerFoto(item) {
     setSelectedImage(item.imagem ?? null);
     setSelectedItemName(item.nome);
     setImageModalVisible(true);
   }
 
-  function handleRemoverItem(item: EstoqueItem) {
+  function handleRemoverItem(item) {
     Alert.alert(
       'Confirmar Exclusão',
       `Deseja realmente remover o item "${item.nome}" (ID: ${item.id}) do estoque?`,
@@ -99,7 +99,7 @@ export default function EstoqueScreen() {
               Alert.alert('Sucesso', 'Item removido do estoque.');
               setModalVisible(false);
               carregar();
-            } catch (err: unknown) {
+            } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
               Alert.alert('Erro', `Não foi possível remover: ${msg}`);
             } finally {
@@ -354,7 +354,7 @@ export default function EstoqueScreen() {
   );
 }
 
-function DetailRow({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+function DetailRow({ label, value, highlight = false }) {
   return (
     <View style={styles.detailRow}>
       <Text style={styles.detailLabel}>{label}:</Text>

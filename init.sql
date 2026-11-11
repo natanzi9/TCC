@@ -39,8 +39,6 @@ CREATE TABLE saidas (
     devolucao    VARCHAR(10)
 );
 
-UPDATE estoque SET imagem = 'faparuso.jpg' WHERE id = 1;
-
 ALTER TABLE saidas 
     ADD COLUMN qtde_devolvida INT DEFAULT 0,
     ADD COLUMN status_devolucao VARCHAR(20) DEFAULT NULL;

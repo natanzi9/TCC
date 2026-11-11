@@ -1,5 +1,5 @@
-// ============================================================
-// index.tsx — Tela de Login SGA SENAI
+﻿// ============================================================
+// index.jsx — Tela de Login SGA SENAI
 // Estética idêntica ao index.html / style.css do sistema web
 // ============================================================
 import React, { useState } from 'react';
@@ -19,12 +19,12 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { checarAdm, loginUsuario, getApiBase, setApiBase, criarUsuario } from '@/services/api';
+import { autenticar, getApiBase, setApiBase, criarUsuario } from '@/services/api';
 import { SenaiColors } from '@/constants/theme';
 
-function showAlert(title: string, message?: string) {
+function showAlert(title, message) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    window.alert(message ? `${title}\n\n${message}` : title);
+    window.alert(message ? title + '\n\n' + message : title);
   } else {
     Alert.alert(title, message);
   }
@@ -34,9 +34,9 @@ export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
 
-  const [username, setUsername] = useState('admin');
-  const [senha, setSenha] = useState('123');
-  const [tipo, setTipo] = useState<'user' | 'adm'>('adm');
+  const [username, setUsername] = useState('');
+  const [senha, setSenha] = useState('');
+  const [tipo, setTipo] = useState('user');
   const [loading, setLoading] = useState(false);
   const [showSenha, setShowSenha] = useState(false);
   const [erroMsg, setErroMsg] = useState('');
@@ -66,39 +66,19 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      if (tipo === 'adm') {
-        const valido = await checarAdm(u, s);
-        if (valido) {
-          signIn(u, 'adm');
-          router.replace('/home');
-          return;
-        } else {
-          setErroMsg('Usuário ou senha incorretos para Administrador.');
-          showAlert('Erro de Acesso', 'Usuário ou senha incorretos para Administrador.');
-        }
+      const res = await autenticar(u, s, tipo);
+      if (res.valido) {
+        signIn(res.usuario || u, res.tipo);
+        router.replace('/home');
+        return;
       } else {
-        // Tenta login como usuário comum
-        const sucesso = await loginUsuario(u, s);
-        if (sucesso) {
-          signIn(u, 'user');
-          router.replace('/home');
-          return;
-        }
-
-        // Se falhou como usuário, mas digitou credenciais de administrador, tenta como ADM
-        const isAdmin = await checarAdm(u, s);
-        if (isAdmin) {
-          signIn(u, 'adm');
-          router.replace('/home');
-          return;
-        }
-
-        setErroMsg('Usuário ou senha incorretos.');
-        showAlert('Erro de Acesso', 'Usuário ou senha incorretos.');
+        const msg = res.erro || 'Usuário ou senha incorretos.';
+        setErroMsg(msg);
+        showAlert('Erro de Acesso', msg);
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      const aviso = `Falha ao conectar no servidor (${getApiBase()}):\n${msg}`;
+    } catch (err) {
+      const msg = err?.message || String(err);
+      const aviso = 'Falha ao conectar no servidor (' + getApiBase() + '):\n' + msg;
       setErroMsg(aviso);
       showAlert('Erro de Conexão', aviso);
     } finally {
@@ -127,13 +107,13 @@ export default function LoginScreen() {
       showAlert('Sucesso!', 'Conta criada com sucesso! Você já pode entrar.');
       setCriarModal(false);
       setUsername(novoUser.trim());
-      setSenha(novaSenha);
+      setSenha('');
       setTipo('user');
       setNovoUser('');
       setNovaSenha('');
       setConfirmarSenha('');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+    } catch (err) {
+      const msg = err?.message || String(err);
       setCriarErro(msg);
       showAlert('Erro', msg);
     } finally {
@@ -148,7 +128,7 @@ export default function LoginScreen() {
     }
     setApiBase(serverUrl.trim());
     setConfigModal(false);
-    showAlert('Servidor Atualizado', `Novo endereço:\n${getApiBase()}`);
+    showAlert('Servidor Atualizado', 'Novo endereço:\n' + getApiBase());
   }
 
   return (
@@ -233,6 +213,8 @@ export default function LoginScreen() {
                 }}
                 secureTextEntry={!showSenha}
                 autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="password"
               />
               <TouchableOpacity
                 style={styles.eyeBtn}
@@ -289,33 +271,6 @@ export default function LoginScreen() {
             activeOpacity={0.7}
           >
             <Text style={styles.linkCriarText}>Crie uma conta</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Atalhos Rápidos para Testar */}
-        <View style={styles.quickFillRow}>
-          <TouchableOpacity
-            style={styles.quickFillBtn}
-            onPress={() => {
-              setUsername('admin');
-              setSenha('123');
-              setTipo('adm');
-              setErroMsg('');
-            }}
-          >
-            <Text style={styles.quickFillText}>🔑 Admin (admin / 123)</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickFillBtn}
-            onPress={() => {
-              setUsername('aluno');
-              setSenha('123');
-              setTipo('user');
-              setErroMsg('');
-            }}
-          >
-            <Text style={styles.quickFillText}>👤 Aluno (aluno / 123)</Text>
           </TouchableOpacity>
         </View>
 
@@ -405,7 +360,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
             <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 12 }}>
-              Endereço do backend Flask (ex: http://localhost:5000 no navegador web, ou http://10.154.49.255:5000 no celular):
+              Endereço do backend Flask na porta 5001 (ex: http://localhost:5001 no web, ou http://192.168.0.17:5001 no celular):
             </Text>
 
             <TextInput
@@ -414,7 +369,7 @@ export default function LoginScreen() {
               onChangeText={setServerUrl}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="http://10.154.49.255:5000"
+              placeholder="http://192.168.0.17:5001"
             />
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
@@ -654,26 +609,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontStyle: 'italic',
     textDecorationLine: 'underline',
-  },
-  quickFillRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-    marginTop: 14,
-    paddingHorizontal: 16,
-  },
-  quickFillBtn: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  quickFillText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
   },
   footerText: {
     textAlign: 'center',

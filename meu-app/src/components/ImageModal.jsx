@@ -1,16 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SenaiColors } from '@/constants/theme';
 import { getItemImageUrl } from '@/services/api';
 
-interface ImageModalProps {
-  visible: boolean;
-  onClose: () => void;
-  imageName?: string | null;
-  itemName?: string;
-}
-
-export function ImageModal({ visible, onClose, imageName, itemName }: ImageModalProps) {
+export function ImageModal({ visible, onClose, imageName, itemName }) {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(false);
 
@@ -61,7 +54,7 @@ export function ImageModal({ visible, onClose, imageName, itemName }: ImageModal
               <View style={styles.noImageBox}>
                 <Text style={styles.noImageIcon}>📷</Text>
                 <Text style={styles.noImageText}>
-                  {imageName ? `Arquivo: ${imageName}\n(Imagem não encontrada no servidor)` : 'Item sem foto cadastrada'}
+                  {imageName ? 'Arquivo: ' + imageName + '\n(Imagem não encontrada no servidor)' : 'Item sem foto cadastrada'}
                 </Text>
               </View>
             )}

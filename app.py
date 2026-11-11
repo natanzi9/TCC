@@ -102,13 +102,93 @@ def criarconta():
     return render_template("criarconta.html")
 
 
+def _verificar_senha(usuario_obj, senha_plana):
+    if not usuario_obj:
+        return False
+    senha_banco = usuario_obj.get('senha')
+    if not senha_banco:
+        return False
+    if isinstance(senha_banco, bytes):
+        senha_banco = senha_banco.decode('utf-8', errors='ignore')
+    try:
+        if bcrypt.checkpw(senha_plana.encode('utf-8'), senha_banco.encode('utf-8')):
+            return True
+    except Exception:
+        pass
+    return senha_plana == senha_banco
+
+# ===== CHECAR LOGIN (MOBILE APP E API JSON) =====
+@app.route('/api/checar_login', methods=['POST'])
+def api_checar_login():
+    try:
+        dados = request.get_json(silent=True) or {}
+        username = str(dados.get('username') or '').strip()
+        senha = str(dados.get('senha') or '').strip()
+        tipo_preferido = str(dados.get('tipo') or '').strip().lower()
+
+        if not username or not senha:
+            return jsonify({'sucesso': False, 'valido': False, 'erro': 'Preencha usuário e senha.'}), 400
+
+        conexao = banco()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Enforcement estrito: tipo=adm → apenas tabela administrador
+        if tipo_preferido == 'adm':
+            cursor.execute("SELECT * FROM administrador WHERE usuario = %s", (username,))
+            adm = cursor.fetchone()
+            cursor.close()
+            conexao.close()
+            if adm and _verificar_senha(adm, senha):
+                session['usuario'] = username
+                session['tipo'] = 'adm'
+                return jsonify({
+                    'sucesso': True,
+                    'valido': True,
+                    'tipo': 'adm',
+                    'usuario': username
+                }), 200
+            return jsonify({
+                'sucesso': False,
+                'valido': False,
+                'erro': 'Credenciais de administrador inválidas.'
+            }), 401
+
+        # Enforcement estrito: tipo=user (ou qualquer outro) → apenas tabela usuario
+        cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (username,))
+        usr = cursor.fetchone()
+        cursor.close()
+        conexao.close()
+        if usr and _verificar_senha(usr, senha):
+            session['usuario'] = username
+            session['tipo'] = 'user'
+            return jsonify({
+                'sucesso': True,
+                'valido': True,
+                'tipo': 'user',
+                'usuario': username
+            }), 200
+
+        return jsonify({
+            'sucesso': False,
+            'valido': False,
+            'erro': 'Usuário ou senha incorretos.'
+        }), 401
+
+    except Exception as e:
+        print("ERRO EM /api/checar_login:", e)
+        return jsonify({'sucesso': False, 'valido': False, 'erro': str(e)}), 500
+
+
 # ===== LOGIN =====
 @app.route('/api/login', methods=['POST'])
 def apilogin():
+    # Se a requisição veio em formato JSON (App Mobile)
+    if request.is_json or (request.content_type and 'application/json' in request.content_type):
+        return api_checar_login()
 
-    username_digitado = request.form['username']
-    senha_digitada = request.form['senha']
-    tipo = request.form.get('tipo', '')
+    username_digitado = request.form.get('username', '').strip()
+    senha_digitada = request.form.get('senha', '').strip()
+    tipo = request.form.get('tipo', '').strip()
 
     conexao = banco()
     cursor = conexao.cursor(dictionary=True)
@@ -130,15 +210,10 @@ def apilogin():
     cursor.close()
     conexao.close()
 
-    # Verifica senha usando bcrypt
-    if usuario and bcrypt.checkpw(
-        senha_digitada.encode('utf-8'),
-        usuario['senha'].encode('utf-8')
-    ):
-
+    # Verifica senha usando bcrypt ou texto puro
+    if usuario and _verificar_senha(usuario, senha_digitada):
         session['usuario'] = username_digitado
-        session['tipo'] = tipo
-
+        session['tipo'] = tipo or ('adm' if tipo == 'adm' else 'user')
         return redirect(url_for('home'))
 
     return """
@@ -150,7 +225,7 @@ def apilogin():
 # ===== ROTA AUXILIAR PARA O JAVASCRIPT CHECAR CREDENCIAIS DO ADM =====
 @app.route('/api/checar_adm', methods=['POST'])
 def api_checar_adm():
-    dados = request.get_json() or {}
+    dados = request.get_json(silent=True) or {}
     username = dados.get('username', '').strip()
     senha = dados.get('senha', '').strip()
 
@@ -167,20 +242,10 @@ def api_checar_adm():
     cursor.close()
     conexao.close()
 
-    if usuario:
-        # Pega a hash do banco e confere se a senha digitada bate
-        senha_banco = usuario['senha']
-        try:
-            if bcrypt.checkpw(senha.encode('utf-8'), senha_banco.encode('utf-8')):
-                session['usuario'] = username
-                session['tipo'] = 'adm'
-                return jsonify({'valido': True})
-        except Exception:
-            # Caso a senha no banco por algum motivo esteja em texto puro (sem criptografia)
-            if senha == senha_banco:
-                session['usuario'] = username
-                session['tipo'] = 'adm'
-                return jsonify({'valido': True})
+    if usuario and _verificar_senha(usuario, senha):
+        session['usuario'] = username
+        session['tipo'] = 'adm'
+        return jsonify({'valido': True})
 
     return jsonify({'valido': False})
 
@@ -772,4 +837,4 @@ def remover_usuario(id_usuario):
         }), 500
     
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)

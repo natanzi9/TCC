@@ -1,5 +1,5 @@
 // ============================================================
-// adicionar-item.tsx — Cadastro e Alteração de Itens SGA SENAI
+// adicionar-item.jsx — Cadastro e Alteração de Itens SGA SENAI
 // Estética e campos idênticos ao adicionaritens.html / style+itens.css
 // ============================================================
 import React, { useState, useEffect } from 'react';
@@ -19,14 +19,15 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { adicionarItem, alterarItem, getEstoque, EstoqueItem } from '@/services/api';
+import { adicionarItem, alterarItem, getEstoque } from '@/services/api';
 import { SenaiColors } from '@/constants/theme';
 import { SenaiHeader } from '@/components/SenaiHeader';
 
 export default function AdicionarItemScreen() {
   const router = useRouter();
 
-  const [modo, setModo] = useState<'adicionar' | 'alterar'>('adicionar');
+
+  const [modo, setModo] = useState('adicionar');
 
   // Campos do formulário
   const [nome, setNome] = useState('');
@@ -40,9 +41,26 @@ export default function AdicionarItemScreen() {
   const [loading, setLoading] = useState(false);
 
   // Seleção de item para alterar
-  const [estoqueItens, setEstoqueItens] = useState<EstoqueItem[]>([]);
+  // Função para selecionar foto da galeria
+  async function selecionarFoto() {
+    // Solicita permissão
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão', 'Permissão para acessar a galeria foi negada.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setImagem(uri);
+    }
+  }
+  const [estoqueItens, setEstoqueItens] = useState([]);
   const [modalItemPicker, setModalItemPicker] = useState(false);
-  const [itemSelecionadoParaEditar, setItemSelecionadoParaEditar] = useState<EstoqueItem | null>(null);
+  const [itemSelecionadoParaEditar, setItemSelecionadoParaEditar] = useState(null);
   const [pickerSearch, setPickerSearch] = useState('');
 
   useEffect(() => {
@@ -51,7 +69,7 @@ export default function AdicionarItemScreen() {
       .catch(() => {});
   }, []);
 
-  function handleSelecionarItemParaEditar(item: EstoqueItem) {
+  function handleSelecionarItemParaEditar(item) {
     setItemSelecionadoParaEditar(item);
     setNome(item.nome);
     setCategoria(item.categoria ?? '');
@@ -133,7 +151,7 @@ export default function AdicionarItemScreen() {
           { text: 'OK', onPress: () => {} },
         ]);
       }
-    } catch (err: unknown) {
+    } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       Alert.alert('Erro', `Falha ao salvar item: ${msg}`);
     } finally {
