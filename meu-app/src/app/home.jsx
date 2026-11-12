@@ -215,6 +215,7 @@ export default function HomeScreen() {
               carregarDados();
             }}
             colors={[SenaiColors.orange, SenaiColors.primary]}
+            tintColor={SenaiColors.orange}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -246,7 +247,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {loading ? (
+          {loading && itens.length === 0 && saidas.length === 0 ? (
             <ActivityIndicator size="large" color={SenaiColors.orange} style={{ marginVertical: 32 }} />
           ) : (
             <>

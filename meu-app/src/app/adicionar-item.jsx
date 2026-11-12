@@ -16,16 +16,17 @@ import {
   Platform,
   Modal,
   FlatList,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { adicionarItem, alterarItem, getEstoque } from '@/services/api';
+import { adicionarItem, alterarItem, getEstoque, uploadImagem, getItemImageUrl } from '@/services/api';
 import { SenaiColors } from '@/constants/theme';
 import { SenaiHeader } from '@/components/SenaiHeader';
 
 export default function AdicionarItemScreen() {
   const router = useRouter();
-
 
   const [modo, setModo] = useState('adicionar');
 
@@ -36,28 +37,15 @@ export default function AdicionarItemScreen() {
   const [preco, setPreco] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [estoqueMinimo, setEstoqueMinimo] = useState('');
-  const [imagem, setImagem] = useState('');
+
+  // Imagem: guardamos a URI local para visualização e o nome do arquivo já enviado
+  const [imagemUri, setImagemUri] = useState(null);   // URI local (visualização prévia)
+  const [imagemNome, setImagemNome] = useState('');   // nome salvo no servidor
 
   const [loading, setLoading] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
 
   // Seleção de item para alterar
-  // Função para selecionar foto da galeria
-  async function selecionarFoto() {
-    // Solicita permissão
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão', 'Permissão para acessar a galeria foi negada.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setImagem(uri);
-    }
-  }
   const [estoqueItens, setEstoqueItens] = useState([]);
   const [modalItemPicker, setModalItemPicker] = useState(false);
   const [itemSelecionadoParaEditar, setItemSelecionadoParaEditar] = useState(null);
@@ -69,6 +57,50 @@ export default function AdicionarItemScreen() {
       .catch(() => {});
   }, []);
 
+  // ---- Galeria de imagem ----
+  async function selecionarFoto() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão negada', 'Precisamos de acesso à galeria para selecionar uma imagem.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+    });
+
+    if (result.canceled) return;
+
+    const uri = result.assets[0].uri;
+    setImagemUri(uri);
+    setImagemNome('');   // será preenchido após o upload
+
+    // Faz upload imediatamente ao selecionar
+    setUploadingImg(true);
+    try {
+      const res = await uploadImagem(uri);
+      if (res?.nome_arquivo) {
+        setImagemNome(res.nome_arquivo);
+      } else {
+        Alert.alert('Aviso', 'Upload feito, mas nome do arquivo não retornou. Tente novamente.');
+        setImagemUri(null);
+      }
+    } catch (err) {
+      Alert.alert('Erro no upload', err?.message || 'Não foi possível enviar a imagem.');
+      setImagemUri(null);
+    } finally {
+      setUploadingImg(false);
+    }
+  }
+
+  function removerFoto() {
+    setImagemUri(null);
+    setImagemNome('');
+  }
+
+  // ---- Seleção de item para editar ----
   function handleSelecionarItemParaEditar(item) {
     setItemSelecionadoParaEditar(item);
     setNome(item.nome);
@@ -77,7 +109,14 @@ export default function AdicionarItemScreen() {
     setPreco(item.preco != null ? String(item.preco) : '');
     setQuantidade(String(item.quantidade ?? 0));
     setEstoqueMinimo(String(item.estoque_min ?? 0));
-    setImagem(item.imagem ?? '');
+    // Restaura a imagem existente no servidor como visualização prévia (via URL)
+    if (item.imagem) {
+      setImagemNome(item.imagem);
+      setImagemUri(null); // usaremos imagemNome para montar a URL de visualização
+    } else {
+      setImagemNome('');
+      setImagemUri(null);
+    }
     setModalItemPicker(false);
   }
 
@@ -88,10 +127,12 @@ export default function AdicionarItemScreen() {
     setPreco('');
     setQuantidade('');
     setEstoqueMinimo('');
-    setImagem('');
+    setImagemUri(null);
+    setImagemNome('');
     setItemSelecionadoParaEditar(null);
   }
 
+  // ---- Salvar ----
   async function handleSalvar() {
     if (!nome.trim()) {
       Alert.alert('Atenção', 'O campo NOME é obrigatório!');
@@ -109,25 +150,28 @@ export default function AdicionarItemScreen() {
     }
     const min = parseInt(estoqueMinimo, 10) || 0;
 
+    if (uploadingImg) {
+      Alert.alert('Aguarde', 'A imagem ainda está sendo enviada. Aguarde um instante.');
+      return;
+    }
+
     setLoading(true);
     try {
-      if (modo === 'adicionar') {
-        await adicionarItem({
-          nome: nome.trim(),
-          categoria: categoria.trim(),
-          descricao: descricao.trim(),
-          preco: p,
-          quantidade: q,
-          estoque_min: min,
-          imagem: imagem.trim() || undefined,
-        });
+      const payload = {
+        nome: nome.trim(),
+        categoria: categoria.trim(),
+        descricao: descricao.trim(),
+        preco: p,
+        quantidade: q,
+        estoque_min: min,
+        imagem: imagemNome || undefined,
+      };
 
+      if (modo === 'adicionar') {
+        await adicionarItem(payload);
         Alert.alert('Sucesso!', 'Item adicionado ao estoque com sucesso!', [
           { text: 'Ver Estoque', onPress: () => router.replace('/estoque') },
-          {
-            text: 'Adicionar Outro',
-            onPress: limparFormulario,
-          },
+          { text: 'Adicionar Outro', onPress: limparFormulario },
         ]);
       } else {
         if (!itemSelecionadoParaEditar) {
@@ -135,17 +179,7 @@ export default function AdicionarItemScreen() {
           setLoading(false);
           return;
         }
-
-        await alterarItem(itemSelecionadoParaEditar.id, {
-          nome: nome.trim(),
-          categoria: categoria.trim(),
-          descricao: descricao.trim(),
-          preco: p,
-          quantidade: q,
-          estoque_min: min,
-          imagem: imagem.trim() || undefined,
-        });
-
+        await alterarItem(itemSelecionadoParaEditar.id, payload);
         Alert.alert('Sucesso!', 'Item atualizado com sucesso!', [
           { text: 'Ver Estoque', onPress: () => router.replace('/estoque') },
           { text: 'OK', onPress: () => {} },
@@ -165,6 +199,13 @@ export default function AdicionarItemScreen() {
       String(i.id).includes(pickerSearch) ||
       (i.categoria ?? '').toLowerCase().includes(pickerSearch.toLowerCase()),
   );
+
+  // Visualização: URI local tem prioridade; senão usa URL do servidor
+  const previewSource = imagemUri
+    ? { uri: imagemUri }
+    : imagemNome
+    ? { uri: getItemImageUrl(imagemNome) }
+    : null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -307,25 +348,46 @@ export default function AdicionarItemScreen() {
               />
             </View>
 
-            {/* Campo IMAGEM (Nome do arquivo) */}
+            {/* Campo IMAGEM — seletor da galeria */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>📷 IMAGEM (NOME DO ARQUIVO OU URL):</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ex: faparuso.jpg ou alicate.png"
-                placeholderTextColor="#94A3B8"
-                value={imagem}
-                onChangeText={setImagem}
-                autoCapitalize="none"
-              />
+              <Text style={styles.label}>📷 IMAGEM:</Text>
+
+              {/* Preview */}
+              {previewSource ? (
+                <View style={styles.previewContainer}>
+                  <Image source={previewSource} style={styles.previewImg} resizeMode="cover" />
+                  {uploadingImg && (
+                    <View style={styles.previewOverlay}>
+                      <ActivityIndicator color="#fff" />
+                      <Text style={styles.previewOverlayText}>Enviando...</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity style={styles.btnRemoverFoto} onPress={removerFoto}>
+                    <Text style={styles.btnRemoverFotoText}>✕ Remover foto</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.btnGaleria, uploadingImg && styles.btnDisabled]}
+                  onPress={selecionarFoto}
+                  disabled={uploadingImg}
+                  activeOpacity={0.8}
+                >
+                  {uploadingImg ? (
+                    <ActivityIndicator color={SenaiColors.primary} />
+                  ) : (
+                    <Text style={styles.btnGaleriaText}>🖼️  Selecionar da Galeria</Text>
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
 
-            {/* Botões de Ação (idênticos aos botões do web) */}
+            {/* Botões de Ação */}
             <View style={styles.botoesContainer}>
               <TouchableOpacity
-                style={[styles.btnSalvar, loading && styles.btnDisabled]}
+                style={[styles.btnSalvar, (loading || uploadingImg) && styles.btnDisabled]}
                 onPress={handleSalvar}
-                disabled={loading}
+                disabled={loading || uploadingImg}
                 activeOpacity={0.85}
               >
                 {loading ? (
@@ -499,6 +561,54 @@ const styles = StyleSheet.create({
     minHeight: 64,
     textAlignVertical: 'top',
   },
+  // ---- galeria / imagem ----
+  btnGaleria: {
+    borderWidth: 1.5,
+    borderColor: SenaiColors.primary,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+  },
+  btnGaleriaText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: SenaiColors.primary,
+  },
+  previewContainer: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+  },
+  previewImg: {
+    width: '100%',
+    height: 180,
+  },
+  previewOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  previewOverlayText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  btnRemoverFoto: {
+    backgroundColor: '#FEE2E2',
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  btnRemoverFotoText: {
+    color: '#DC2626',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  // ---- botões ----
   botoesContainer: {
     marginTop: 10,
     gap: 8,
@@ -535,6 +645,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  // ---- modal ----
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.65)',

@@ -177,7 +177,7 @@ export default function SaidasScreen() {
           </View>
 
           {/* Lista de Saídas */}
-          {loading ? (
+          {loading && saidas.length === 0 ? (
             <ActivityIndicator size="large" color={SenaiColors.orange} style={{ marginVertical: 36 }} />
           ) : (
             <FlatList
@@ -188,6 +188,8 @@ export default function SaidasScreen() {
                 setRefreshing(true);
                 carregarSaidas();
               }}
+              tintColor={SenaiColors.orange}
+              colors={[SenaiColors.orange, SenaiColors.primary]}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => {
                 const isParcial = item.status_devolucao === 'parcial';

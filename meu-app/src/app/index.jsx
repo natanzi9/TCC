@@ -360,7 +360,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
             <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 12 }}>
-              Endereço do backend Flask na porta 5001 (ex: http://localhost:5001 no web, ou http://192.168.0.17:5001 no celular):
+              Endereço do backend Flask na porta 5000 (ex: http://localhost:5000 na web, ou http://192.168.1.4:5000 no celular):
             </Text>
 
             <TextInput
@@ -369,7 +369,7 @@ export default function LoginScreen() {
               onChangeText={setServerUrl}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="http://192.168.0.17:5001"
+              placeholder="http://192.168.1.4:5000"
             />
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
