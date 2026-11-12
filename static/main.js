@@ -158,6 +158,99 @@ function abrirAlterar() {
     });
 }
 
+// ===== CADASTRAR ITEM COM ALERTA SWEETALERT =====
+document.addEventListener('DOMContentLoaded', function () {
+
+    const form = document.getElementById('formItem');
+
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
+
+        e.preventDefault(); // Impede abrir a página JSON
+
+        const botao = document.getElementById('btnAdicionar');
+
+        // Verifica se os campos estão preenchidos
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const dados = new FormData(form);
+
+        botao.disabled = true;
+
+        Swal.fire({
+            title: 'Cadastrando item...',
+            text: 'Aguarde um momento.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+
+            const resposta = await fetch(form.action, {
+                method: 'POST',
+                body: dados
+            });
+
+            const resultado = await resposta.json();
+
+            if (resposta.ok && resultado.sucesso) {
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ITEM CADASTRADO!',
+                    text: 'O item foi adicionado ao estoque com sucesso!',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#045cac'
+                }).then(() => {
+                    form.reset();
+
+                    const preview = document.getElementById('previewImagem');
+                    const nomeArquivo = document.getElementById('nomeArquivo');
+
+                    if (preview) {
+                        preview.src = '';
+                        preview.style.display = 'none';
+                    }
+
+                    if (nomeArquivo) {
+                        nomeArquivo.textContent = '';
+                    }
+                });
+
+            } else {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ERRO AO CADASTRAR!',
+                    text: resultado.erro || 'Não foi possível cadastrar o item.',
+                    confirmButtonColor: '#045cac'
+                });
+
+            }
+
+        } catch (erro) {
+
+            console.error('Erro:', erro);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'ERRO DE CONEXÃO!',
+                text: 'Não foi possível comunicar com o servidor.',
+                confirmButtonColor: '#045cac'
+            });
+
+        } finally {
+            botao.disabled = false;
+        }
+
+    });
+
+});
+
 // ===== ADICIONAR ITEM NA TABELA DE SAÍDAS =====
 function adicionarNaTabela() {
     const id_item = document.getElementById('id_item').value.trim();

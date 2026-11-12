@@ -680,23 +680,31 @@ def api_mostra_users():
         print("ERRO AO BUSCAR USUARIO:", e)
         return jsonify({'sucesso': False, 'erro': str(e)}), 500
 
-from flask import Flask, request, jsonify
-
-# (Seu código existente de conexão e da rota GET continua aqui...)
-
 @app.route('/api/adicionarestoque', methods=['POST'])
 def api_post_estoque():
     try:
-        dados = request.get_json() or {}
-        
+        if request.is_json:
+            dados = request.get_json() or {}
+            imagem = dados.get('imagem')
+        else:
+            dados = request.form
+            imagem = None
+
         nome = dados.get('nome')
         quantidade = dados.get('quantidade')
         preco = dados.get('preco')
         categoria = dados.get('categoria', '')
         descricao = dados.get('descricao', '')
         estoque_min = dados.get('estoque_min', dados.get('estoqueminimo', 0))
-        imagem = dados.get('imagem')
-        
+
+        arquivo = request.files.get('imagem')
+        if arquivo and arquivo.filename:
+            from werkzeug.utils import secure_filename
+
+            nome_arquivo = secure_filename(arquivo.filename)
+            arquivo.save(os.path.join(app.config['UPLOAD_FOLDER'], nome_arquivo))
+            imagem = nome_arquivo
+
         if not nome or quantidade is None or preco is None:
             return jsonify({
                 'sucesso': False,
@@ -705,18 +713,18 @@ def api_post_estoque():
 
         conexao = banco()
         cursor = conexao.cursor()
-        
+
         sql = """INSERT INTO estoque (nome, categoria, descricao, preco, quantidade, estoque_min, imagem)
                  VALUES (%s, %s, %s, %s, %s, %s, %s)"""
         valores = (nome, categoria, descricao, preco, quantidade, estoque_min, imagem)
-        
+
         cursor.execute(sql, valores)
         conexao.commit()
         novo_id = cursor.lastrowid
-        
+
         cursor.close()
         conexao.close()
-        
+
         return jsonify({
             'sucesso': True,
             'mensagem': 'Item cadastrado com sucesso!',
@@ -837,4 +845,4 @@ def remover_usuario(id_usuario):
         }), 500
     
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
