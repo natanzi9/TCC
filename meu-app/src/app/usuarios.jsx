@@ -147,7 +147,7 @@ export default function UsuariosScreen() {
             Total cadastrado: {usuarios.length} {usuarios.length === 1 ? 'usuário' : 'usuários'}
           </Text>
 
-          {loading ? (
+          {loading && usuarios.length === 0 ? (
             <ActivityIndicator size="large" color={SenaiColors.orange} style={{ marginVertical: 36 }} />
           ) : (
             <FlatList
@@ -158,6 +158,8 @@ export default function UsuariosScreen() {
                 setRefreshing(true);
                 carregar();
               }}
+              tintColor={SenaiColors.orange}
+              colors={[SenaiColors.orange, SenaiColors.primary]}
               showsVerticalScrollIndicator={false}
               renderItem={({ item, index }) => {
                 const isCurrentUser = item.usuario === username;

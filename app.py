@@ -11,6 +11,7 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'  # Pasta onde as imagens são sal
 os.makedirs('static/uploads', exist_ok=True)  # Cria a pasta se não existir
 
 # ===== SUPORTE CORS PARA O APP MOBILE (EXPO) =====
+# Permite que o app mobile (porta 8081) converse diretamente com a API Flask
 @app.before_request
 def handle_options():
     if request.method == 'OPTIONS':
@@ -29,12 +30,14 @@ def add_cors_headers(response):
 
 
 # ===== CONEXÃO COM O BANCO DE DADOS =====
+# Lê variável de ambiente no Docker ou conecta no localhost no Windows
 def banco():
+    host_db = os.getenv("DB_HOST", "localhost")
     return mysql.connector.connect(
-        host="db_almox",
-        user="root",
-        password="root",  
-        database="tcc"
+        host=host_db,
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", "root"),  
+        database=os.getenv("DB_NAME", "tcc")
     )
 
 # ===== PÁGINAS =====
@@ -102,6 +105,7 @@ def criarconta():
     return render_template("criarconta.html")
 
 
+# Checagem com bcrypt: a senha real nunca é armazenada em texto puro
 def _verificar_senha(usuario_obj, senha_plana):
     if not usuario_obj:
         return False
@@ -132,7 +136,7 @@ def api_checar_login():
         conexao = banco()
         cursor = conexao.cursor(dictionary=True)
 
-        # Enforcement estrito: tipo=adm → apenas tabela administrador
+        # Consulta parametrizada (%s): protege contra injeção de SQL
         if tipo_preferido == 'adm':
             cursor.execute("SELECT * FROM administrador WHERE usuario = %s", (username,))
             adm = cursor.fetchone()
@@ -153,7 +157,7 @@ def api_checar_login():
                 'erro': 'Credenciais de administrador inválidas.'
             }), 401
 
-        # Enforcement estrito: tipo=user (ou qualquer outro) → apenas tabela usuario
+        # Validação estrita: tipo=user (ou qualquer outro) → apenas tabela usuario
         cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (username,))
         usr = cursor.fetchone()
         cursor.close()
@@ -354,7 +358,7 @@ def api_registrarsaida():
                     devolucao_item  # Usando o valor individual do item aqui!
                 )
             )
-            # Diminui a quantidade no estoque
+            # Baixa automática no saldo do estoque
             cursor.execute(
                 "UPDATE estoque SET quantidade = quantidade - %s WHERE id = %s",
                 (item['qtde'], item['id'])
@@ -363,7 +367,7 @@ def api_registrarsaida():
         return jsonify({'ok': True})
 
     except Exception as e:
-        conexao.rollback()  # Desfaz tudo se der erro
+        conexao.rollback()  # Transação: se falhar, desfaz tudo e preserva o estoque
         print("ERRO:", e)
         return jsonify({'ok': False, 'erro': str(e)}), 500
 
@@ -588,8 +592,7 @@ def api_exportarcsv():
         conteudo_puro = output.getvalue()
         output.close()
         
-        # 6. Converte o texto para bytes usando 'utf-8-sig'.
-        # Isso gera o sinalizador (BOM) perfeito que obriga o Excel a reconhecer os acentos.
+        # utf-8-sig: adiciona BOM para o Excel abrir com acentuação correta
         conteudo_bytes = conteudo_puro.encode('utf-8-sig')
         
         # 7. Cria a resposta HTTP correta enviando os BYTES
@@ -836,5 +839,40 @@ def remover_usuario(id_usuario):
             'erro': str(e)
         }), 500
     
+
+# ===== UPLOAD DE IMAGEM (usado pelo app mobile) =====
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/api/upload_imagem', methods=['POST'])
+def api_upload_imagem():
+    try:
+        arquivo = request.files.get('imagem')
+        if not arquivo or arquivo.filename == '':
+            return jsonify({'sucesso': False, 'erro': 'Nenhum arquivo enviado.'}), 400
+
+        if not allowed_file(arquivo.filename):
+            return jsonify({'sucesso': False, 'erro': 'Tipo de arquivo não permitido.'}), 400
+
+        # Identificador único (UUID): gera nome aleatório para não sobrescrever arquivos no servidor
+        import uuid
+        ext = arquivo.filename.rsplit('.', 1)[1].lower()
+        nome_arquivo = uuid.uuid4().hex + '.' + ext
+        caminho = os.path.join(app.config['UPLOAD_FOLDER'], nome_arquivo)
+        arquivo.save(caminho)
+
+        return jsonify({
+            'sucesso': True,
+            'nome_arquivo': nome_arquivo,
+            'url': '/static/uploads/' + nome_arquivo
+        }), 200
+
+    except Exception as e:
+        print("ERRO AO FAZER UPLOAD:", e)
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

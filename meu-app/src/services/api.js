@@ -1,13 +1,14 @@
 ﻿// ============================================================
-// API Service - SGA SENAI Mobile
+// Serviço de API - SGA SENAI Mobile
 // Centraliza todas as chamadas HTTP ao backend Flask
 // ============================================================
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-const BACKEND_PORT = 5001;
+const BACKEND_PORT = 5000;
 const DEFAULT_TIMEOUT_MS = 8000;
 
+// Detecta o IP do servidor automaticamente via Expo ou usa o IP local
 export function resolveDefaultApiBase() {
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined' && window.location && window.location.hostname) {
@@ -28,7 +29,7 @@ export function resolveDefaultApiBase() {
     }
   }
 
-  return 'http://192.168.0.17:' + BACKEND_PORT;
+  return 'http://192.168.1.4:' + BACKEND_PORT;
 }
 
 let currentApiBase = resolveDefaultApiBase();
@@ -44,8 +45,9 @@ export function setApiBase(newUrl) {
 
 export const API_BASE = currentApiBase;
 
-// ---- helpers de rede ----
+// ---- Funções auxiliares de rede ----
 
+// Requisição HTTP com tempo limite (timeout) para evitar que o app trave se o servidor cair
 export async function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -204,6 +206,27 @@ export async function criarUsuario(usuario, senha) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ usuario, senha }),
   });
+  return handleResponse(res);
+}
+
+export async function uploadImagem(uri) {
+  const nomeParts = uri.split('/');
+  const nomeArquivo = nomeParts[nomeParts.length - 1];
+  const ext = nomeArquivo.split('.').pop()?.toLowerCase() || 'jpg';
+  const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+
+  const formData = new FormData();
+  formData.append('imagem', {
+    uri,
+    name: nomeArquivo,
+    type: mimeType,
+  });
+
+  const res = await fetchWithTimeout(
+    getApiBase() + '/api/upload_imagem',
+    { method: 'POST', body: formData },
+    15000,
+  );
   return handleResponse(res);
 }
 

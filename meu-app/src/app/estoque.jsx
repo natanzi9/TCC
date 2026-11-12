@@ -184,7 +184,7 @@ export default function EstoqueScreen() {
           </View>
 
           {/* Lista de Itens */}
-          {loading ? (
+          {loading && itens.length === 0 ? (
             <ActivityIndicator size="large" color={SenaiColors.orange} style={{ marginVertical: 36 }} />
           ) : (
             <FlatList
@@ -195,6 +195,8 @@ export default function EstoqueScreen() {
                 setRefreshing(true);
                 carregar();
               }}
+              tintColor={SenaiColors.orange}
+              colors={[SenaiColors.orange, SenaiColors.primary]}
               showsVerticalScrollIndicator={false}
               renderItem={({ item, index }) => {
                 const isLow = (item.estoque_min ?? 0) > 0 && item.quantidade <= (item.estoque_min ?? 0);
